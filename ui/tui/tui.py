@@ -12,6 +12,7 @@ from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer
 from ui.tui.widgets.cpuWidget import CpuWidget
 from ui.tui.widgets.ramWidget import RamWidget
+from ui.tui.widgets.networkWidget import NetworkWidget
 
 
 class MonitorifyApp(App):
@@ -26,6 +27,7 @@ class MonitorifyApp(App):
         yield Footer()
         yield CpuWidget()
         yield RamWidget()
+        yield NetworkWidget()
 
     def on_mount(self) -> None:
 
@@ -34,6 +36,7 @@ class MonitorifyApp(App):
     def update_display(self) -> None:
         self.query_one(CpuWidget).update_cpu()
         self.query_one(RamWidget).update_ram()
+        self.query_one(NetworkWidget).update_network()
 
 
 if __name__ == "__main__":
