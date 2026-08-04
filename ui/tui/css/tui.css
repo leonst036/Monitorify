@@ -13,9 +13,10 @@ NetworkWidget {
     border: round #5c6370;
     border-title-color: #61afef;
     border-title-align: left;
-    padding: 0 2;
+    padding: 0 1;
     margin: 0;
     height: 100%;
+    layout: horizontal;
 }
 
 CpuWidget {
@@ -23,12 +24,46 @@ CpuWidget {
     /* Span full top row */
 }
 
-CpuWidget>Static,
-RamWidget>Static,
-NetworkWidget>Static {
+CpuWidget > Static,
+RamWidget > Static {
     text-style: bold;
     color: #abb2bf;
     margin-bottom: 1;
+}
+
+#network_graph {
+    width: 1fr;
+    height: 100%;
+}
+
+#network_info_wrapper {
+    width: 26;
+    height: 100%;
+    align: center middle;
+    margin-left: 1;
+}
+
+#network_info {
+    width: 100%;
+    height: auto;
+    border: round #5c6370;
+    border-title-color: #61afef;
+    border-title-align: right;
+    border-subtitle-color: #61afef;
+    border-subtitle-align: right;
+    padding: 0 1;
+}
+
+#network_info Static {
+    text-style: bold;
+}
+
+.rx_text {
+    color: #61afef;
+}
+
+.tx_text {
+    color: #c678dd;
 }
 
 HistorySparkline {
