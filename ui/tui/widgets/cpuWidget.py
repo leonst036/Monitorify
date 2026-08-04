@@ -1,9 +1,10 @@
 # pyrefly: ignore [missing-import]
 from textual.widgets import Static
 # pyrefly: ignore [missing-import]
-from textual.containers import Container
+from textual.containers import Container, Vertical
 from stats.cpuStats import get_cpu_usage
 from ui.tui.widgets.brailleGraph import BrailleGraph
+from ui.tui.widgets.statusWidget import StatusWidget
 
 
 class CpuWidget(Container):
@@ -16,6 +17,21 @@ class CpuWidget(Container):
         # Initialize the reusable graph widget
         self.sparkline = BrailleGraph(data_lines=1, color1="#61afef", y_max=100.0, id="cpu_sparkline")
         yield self.sparkline
+        
+        self.status_box = StatusWidget(id="status_box")
+        yield self.status_box
+
+    def on_mount(self):
+        self.status_box.styles.position = "absolute"
+        self._reposition_status()
+
+    def on_resize(self):
+        self._reposition_status()
+
+    def _reposition_status(self):
+        # Place status box in top-right corner of CpuWidget
+        box_width = 30  # matches CSS width
+        self.status_box.styles.offset = (self.size.width - box_width, 0)
 
     def update_cpu(self):
         usage = get_cpu_usage(unit='percent')
