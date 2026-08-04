@@ -12,17 +12,18 @@ class BrailleGraph(Widget):
     }
     """
 
-    def __init__(self, data_lines: int = 1, max_points: int = 150, color1: str = "#c678dd", color2: str = "#61afef", y_max: float | None = None, **kwargs):
+    def __init__(self, data_lines: int = 1, max_points: int = 150, color1: str = "#c678dd", color2: str = "#61afef", y_max: float | None = None, min_dots: int = 1, **kwargs):
         super().__init__(**kwargs)
         self.data_lines = data_lines
         self.max_points = max_points
         self.color1 = Style(color=color1)
         self.color2 = Style(color=color2)
         self.y_max = y_max
+        self.min_dots = min_dots
         
-        self.history1 = deque([0] * max_points, maxlen=max_points)
+        self.history1 = deque(maxlen=max_points)
         if self.data_lines > 1:
-            self.history2 = deque([0] * max_points, maxlen=max_points)
+            self.history2 = deque(maxlen=max_points)
         
     def update_value(self, val1: float, val2: float = 0):
         self.history1.append(val1)
@@ -55,7 +56,7 @@ class BrailleGraph(Widget):
                 x = start_x + i
                 idx = len(data1) - num_points + i
                 val = data1[idx]
-                dots = int((val / max_val) * h)
+                dots = max(self.min_dots, int((val / max_val) * h))
                 
                 # Draw up from bottom
                 for y in range(h - dots, h):
