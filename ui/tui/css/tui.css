@@ -16,6 +16,9 @@ NetworkWidget {
     padding: 0 1;
     margin: 0;
     height: 100%;
+}
+
+NetworkWidget {
     layout: horizontal;
 }
 
