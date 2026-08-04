@@ -16,15 +16,15 @@ from ui.tui.widgets.networkWidget import NetworkWidget
 
 
 class MonitorifyApp(App):
+    CSS_PATH = "css/tui.css"
 
     TITLE = "Monitorify"
     BINDINGS = [
         ("q", "quit"),
+        ("c", "quit"),
     ]
 
     def compose(self) -> ComposeResult:
-        yield Header()
-        yield Footer()
         yield CpuWidget()
         yield RamWidget()
         yield NetworkWidget()

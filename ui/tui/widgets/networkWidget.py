@@ -1,10 +1,8 @@
 # pyrefly: ignore [missing-import]
 from textual.widgets import Static
-# pyrefly: ignore [missing-import]
 from textual.containers import Container
 from stats.networkStats import get_network_usage
-from ui.tui.widgets.historySparkline import HistorySparkline
-
+from ui.tui.widgets.brailleGraph import BrailleGraph
 
 def format_bps(bps):
     if bps >= 1024 * 1024:
@@ -14,17 +12,16 @@ def format_bps(bps):
     else:
         return f"{bps:.0f} B/s"
 
-
 class NetworkWidget(Container):
+    BORDER_TITLE = "NET"
+
     def compose(self):
-        yield Static("Network Usage")
-        
         self.network_usage_static = Static("Init...")
         yield self.network_usage_static
 
-        # Initialize the reusable graph widget
-        self.sparkline = HistorySparkline(max_points=50, summary_function=max)
-        yield self.sparkline
+        # data_lines=2 creates the mirrored graph for download/upload
+        self.network_graph = BrailleGraph(data_lines=2, color1="#61afef", color2="#c678dd", id="network_graph")
+        yield self.network_graph
 
     def update_network(self):
         rx_bps, tx_bps = get_network_usage()
@@ -33,6 +30,4 @@ class NetworkWidget(Container):
         tx_str = format_bps(tx_bps)
         
         self.network_usage_static.update(f"↓ {rx_str}  ↑ {tx_str}")
-        
-        # Update graph data through the helper method
-        self.sparkline.update_value(rx_bps + tx_bps)
+        self.network_graph.update_value(rx_bps, tx_bps)

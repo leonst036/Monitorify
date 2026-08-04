@@ -1,0 +1,36 @@
+Screen {
+    background: transparent;
+    layout: grid;
+    grid-size: 2 2;
+    grid-rows: 1fr 1fr;
+    grid-columns: 1fr 1fr;
+    padding: 0;
+}
+
+CpuWidget,
+RamWidget,
+NetworkWidget {
+    border: round #5c6370;
+    border-title-color: #61afef;
+    border-title-align: left;
+    padding: 0 2;
+    margin: 0;
+    height: 100%;
+}
+
+CpuWidget {
+    column-span: 2;
+    /* Span full top row */
+}
+
+CpuWidget>Static,
+RamWidget>Static,
+NetworkWidget>Static {
+    text-style: bold;
+    color: #abb2bf;
+    margin-bottom: 1;
+}
+
+HistorySparkline {
+    color: #c678dd;
+}

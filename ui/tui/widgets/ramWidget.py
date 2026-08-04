@@ -3,18 +3,18 @@ from textual.widgets import Static
 # pyrefly: ignore [missing-import]
 from textual.containers import Container
 from stats.ramStats import get_ram_usage
-from ui.tui.widgets.historySparkline import HistorySparkline
+from ui.tui.widgets.brailleGraph import BrailleGraph
 
 
 class RamWidget(Container):
+    BORDER_TITLE = "MEM"
+
     def compose(self):
-        yield Static("Ram Usage")
-        
         self.ram_usage_static = Static(f"{get_ram_usage(unit='percent')}%")
         yield self.ram_usage_static
 
         # Initialize the reusable graph widget
-        self.sparkline = HistorySparkline(max_points=50, summary_function=max)
+        self.sparkline = BrailleGraph(data_lines=1, color1="#c678dd", y_max=100.0, id="ram_sparkline")
         yield self.sparkline
 
     def update_ram(self):
