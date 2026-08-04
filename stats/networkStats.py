@@ -61,3 +61,9 @@ def get_network_usage(interface=None, interval=1, max_speed=None):
     rx_bps = diff_rx / interval
     tx_bps = diff_tx / interval
     return rx_bps, tx_bps
+
+def get_total_network_stats():
+    net_stats = _read_net_dev()
+    total_rx = sum(rx for rx, tx in net_stats.values())
+    total_tx = sum(tx for rx, tx in net_stats.values())
+    return total_rx, total_tx
