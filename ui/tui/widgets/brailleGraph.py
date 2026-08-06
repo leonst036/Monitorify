@@ -12,7 +12,7 @@ class BrailleGraph(Widget):
     }
     """
 
-    def __init__(self, data_lines: int = 1, max_points: int = 150, color1: str = "#c678dd", color2: str = "#61afef", y_max: float | None = None, min_dots: int = 1, **kwargs):
+    def __init__(self, data_lines: int = 1, max_points: int = 2000, color1: str = "#c678dd", color2: str = "#61afef", y_max: float | None = None, min_dots: int = 1, **kwargs):
         super().__init__(**kwargs)
         self.data_lines = data_lines
         self.max_points = max_points
@@ -38,8 +38,13 @@ class BrailleGraph(Widget):
 
         w = width_chars * 2
         h = height_chars * 4
-        with open("/tmp/braille_debug.log", "a") as f:
-            f.write(f"ID: {self.id}, width_chars: {width_chars}, height_chars: {height_chars}, w: {w}, h: {h}\n")
+
+        if w > self.max_points:
+            self.max_points = w
+            self.history1 = deque(self.history1, maxlen=self.max_points)
+            if self.data_lines > 1:
+                self.history2 = deque(self.history2, maxlen=self.max_points)
+
         grid = [[False]*w for _ in range(h)]
         
         data1 = list(self.history1)
@@ -82,7 +87,11 @@ class BrailleGraph(Widget):
                 
                 v1, v2 = data1[idx], data2[idx]
                 dots1 = int((v1 / max_val) * (h / 2))
+                if v1 > 0 and dots1 == 0:
+                    dots1 = self.min_dots
                 dots2 = int((v2 / max_val) * (h / 2))
+                if v2 > 0 and dots2 == 0:
+                    dots2 = self.min_dots
                 
                 # Draw up from center
                 for y in range(center_y - dots1, center_y):
