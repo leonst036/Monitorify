@@ -2,7 +2,7 @@
 from textual.containers import Container
 # pyrefly: ignore [missing-import]
 from textual.widgets import ListItem, ListView, Static
-from stats.programmList import get_latest_process_items_data, start_process_cache_thread
+from stats.programmList import get_latest_process_items_data, start_process_cache_thread, _format_process_item
 
 
 class FastListView(ListView):
@@ -77,10 +77,11 @@ class ProgrammListWidget(Container):
         # In-place update
         update_limit = min(existing_count, new_count)
         for i in range(update_limit):
-            existing_items[i].query_one(Static).update(sliced_data[i])
+            formatted_text = _format_process_item(sliced_data[i])
+            existing_items[i].query_one(Static).update(formatted_text)
 
         if new_count > existing_count:
-            new_items = [ListItem(Static(txt)) for txt in sliced_data[existing_count:]]
+            new_items = [ListItem(Static(_format_process_item(d))) for d in sliced_data[existing_count:]]
             self.list_view.extend(new_items)
         elif existing_count > new_count:
             for item in existing_items[new_count:]:
