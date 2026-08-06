@@ -212,3 +212,57 @@ def get_process_cpu_usage(pids: list[int]):
     _previous_cpu_timestamp = current_timestamp
     
     return resources_data
+
+def get_process_state(pid: int):
+    try:
+        with open(f"/proc/{pid}/status", "r") as f:
+            data = f.read().split('\n')
+            for line in data:
+                if line.startswith("State:"):
+                    if line.split()[1] == 'S':
+                        return "Sleeping"
+                    elif line.split()[1] == 'R':
+                        return "Running"
+                    elif line.split()[1] == 'D':
+                        return "Waiting"
+                    elif line.split()[1] == 'Z':
+                        return "Zombie"
+                    elif line.split()[1] == 'T':
+                        return "Stopped"
+                    else:
+                        continue
+    except (FileNotFoundError, PermissionError, ProcessLookupError, OSError, Exception):
+        return "Unknown"
+
+def get_process_running_time(pid: int) -> str:
+    try:
+        with open("/proc/uptime", "r") as f:
+            uptime_seconds = float(f.read().split()[0])
+            
+        with open(f"/proc/{pid}/stat", "r") as f:
+            data = f.read()
+            end_paren = data.rfind(')')
+            if end_paren == -1:
+                return "Unknown"
+            
+            fields = data[end_paren + 1:].split()
+            start_time_ticks = float(fields[19])
+            
+        start_time_seconds = start_time_ticks / _CLK_TCK
+        elapsed_seconds = int(uptime_seconds - start_time_seconds)
+        
+        if elapsed_seconds < 0:
+            return "00:00"
+            
+        days, remainder = divmod(elapsed_seconds, 86400)
+        hours, remainder = divmod(remainder, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        
+        if days > 0:
+            return f"{days}d {hours:02d}:{minutes:02d}:{seconds:02d}"
+        elif hours > 0:
+            return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+        else:
+            return f"{minutes:02d}:{seconds:02d}"
+    except (FileNotFoundError, PermissionError, ProcessLookupError, OSError, ValueError, IndexError, Exception):
+        return "Unknown"
