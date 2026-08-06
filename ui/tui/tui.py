@@ -29,9 +29,9 @@ class MonitorifyApp(App):
 
     def compose(self) -> ComposeResult:
         with Container(id="main_container"):
-            yield CpuWidget()
-            yield RamWidget()
-            yield NetworkWidget()
+            yield CpuWidget(id="cpu_widget")
+            yield RamWidget(id="ram_widget")
+            yield NetworkWidget(id="network_widget")
         yield Menu()
         with Center(id="warning_container"):
             with Middle():
@@ -62,6 +62,13 @@ class MonitorifyApp(App):
     def action_menu(self) -> None:
         menu = self.query_one(Menu)
         menu.display = not menu.display
+        if menu.display:
+            menu.populate_menu()
+            try:
+                from textual.widgets import SelectionList
+                menu.query_one(SelectionList).focus()
+            except Exception:
+                pass
 if __name__ == "__main__":
     app = MonitorifyApp()
     app.run()
