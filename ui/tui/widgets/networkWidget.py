@@ -59,8 +59,8 @@ class NetworkWidget(Container):
             self.network_info.border_subtitle = "upload"
             yield self.network_info
 
-    def update_network(self):
-        rx_bps, tx_bps = get_network_usage()
+    def update_network(self, interval: float = 1.0):
+        rx_bps, tx_bps = get_network_usage(interval=interval)
         
         self.top_rx = max(self.top_rx, rx_bps)
         self.top_tx = max(self.top_tx, tx_bps)

@@ -42,7 +42,15 @@ class MonitorifyApp(App):
         self.action_get_window_size()
         self.widget_manager = WidgetManager(self.query_one("#main_container"))
         self.update_layout()
-        self.set_interval(1.0, self.update_display)
+        self.update_interval = 1.0
+        self.update_timer = self.set_interval(self.update_interval, self.update_display)
+
+    def set_update_interval(self, seconds: float) -> None:
+        """Updates the graph refresh interval."""
+        self.update_interval = seconds
+        if hasattr(self, "update_timer") and self.update_timer:
+            self.update_timer.stop()
+        self.update_timer = self.set_interval(self.update_interval, self.update_display)
 
     def update_layout(self) -> None:
         """Delegates layout updates to WidgetManager."""
@@ -55,7 +63,7 @@ class MonitorifyApp(App):
         if self.query_one("#main_container").display:
             self.query_one(CpuWidget).update_cpu()
             self.query_one(RamWidget).update_ram()
-            self.query_one(NetworkWidget).update_network()
+            self.query_one(NetworkWidget).update_network(interval=self.update_interval)
     
     def action_get_window_size(self) -> None:
         is_too_small = self.size.width < 80 or self.size.height < 24

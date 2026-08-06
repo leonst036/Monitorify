@@ -1,6 +1,14 @@
 from textual.containers import Container, Vertical
-from textual.widgets import SelectionList, Static
+from textual.widgets import SelectionList, Static, Select
 from textual.widgets.selection_list import Selection
+
+INTERVAL_OPTIONS: list[tuple[str, float]] = [
+    ("0.25s", 0.25),
+    ("0.50s", 0.5),
+    ("1.00s", 1.0),
+    ("2.00s", 2.0),
+    ("5.00s", 5.0),
+]
 
 
 class Menu(Container):
@@ -8,13 +16,21 @@ class Menu(Container):
     def compose(self):
         with Vertical(id="menu"):
             yield Static("[bold #61afef]M[/bold #61afef]enu", id="menu_title")
+            yield Static("[bold #abb2bf]Widgets:[/bold #abb2bf]", classes="menu_label")
             yield SelectionList[str](id="widget_selector")
+            yield Static("[bold #abb2bf]Update Interval:[/bold #abb2bf]", classes="menu_label")
+            yield Select(
+                options=INTERVAL_OPTIONS,
+                value=1.0,
+                id="interval_select",
+                allow_blank=False,
+            )
 
     def on_mount(self) -> None:
         self.populate_menu()
 
     def populate_menu(self) -> None:
-        """Populates selection list with widget options and current states."""
+        """Populates selection list with widget options and updates interval select value."""
         try:
             selection_list = self.query_one(SelectionList)
             selection_list.clear_options()
@@ -25,6 +41,20 @@ class Menu(Container):
                 )
         except Exception:
             pass
+
+        try:
+            interval_select = self.query_one("#interval_select", Select)
+            current_interval = getattr(self.app, "update_interval", 1.0)
+            if interval_select.value != current_interval:
+                interval_select.value = current_interval
+        except Exception:
+            pass
+
+    def on_select_changed(self, event: Select.Changed) -> None:
+        """Handles changes in the update interval selector."""
+        if event.select.id == "interval_select" and event.value is not Select.BLANK:
+            if hasattr(self.app, "set_update_interval"):
+                self.app.set_update_interval(float(event.value))
 
     def on_selection_list_selected_changed(self, event: SelectionList.SelectedChanged) -> None:
         """Toggles widget visibility based on selection changes."""

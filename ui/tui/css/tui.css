@@ -102,5 +102,21 @@ Menu {
 #menu_title {
     text-style: bold;
     color: #61afef;
-    margin-bottom: 1;
+    margin-bottom: 0;
+}
+
+.menu_label {
+    text-style: bold;
+    color: #abb2bf;
+    margin-top: 1;
+    margin-bottom: 0;
+}
+
+#widget_selector {
+    height: 5;
+}
+
+#interval_select {
+    margin-top: 0;
+    margin-bottom: 0;
 }
