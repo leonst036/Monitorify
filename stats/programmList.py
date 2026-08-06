@@ -48,6 +48,8 @@ def build_process_cache(pids=None):
             'name': name,
             'ram_ussage': cache_ram_ussage[i] if i < len(cache_ram_ussage) else 0,
             'cpu_ussage': cache_cpu_ussage[i] if i < len(cache_cpu_ussage) else 0,
+            'state': get_process_state(pid),
+            'running_time': get_process_running_time(pid),
         }
     return cache
 
@@ -62,16 +64,20 @@ def get_process_data_list(pids, cache):
     for pid in pids:
         info = cache.get(pid, {})
         if isinstance(info, str):
-            info = {'name': info, 'ram_ussage': 0, 'cpu_ussage': 0}
+            info = {'name': info, 'ram_ussage': 0, 'cpu_ussage': 0, 'state': 'Unknown', 'running_time': 'Unknown'}
         
         name = info.get('name', 'Unknown')
         ram = info.get('ram_ussage', 0)
         cpu = info.get('cpu_ussage', 0)
+        state = info.get('state', 'Unknown')
+        running_time = info.get('running_time', 'Unknown')
         data_list.append({
             'pid': pid,
             'name': name,
             'ram_ussage': ram,
-            'cpu_ussage': cpu
+            'cpu_ussage': cpu,
+            'state': state,
+            'running_time': running_time
         })
     return data_list
 

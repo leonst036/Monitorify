@@ -4,7 +4,12 @@ from textual.containers import Container
 from textual.widgets import ListItem, ListView, Static
 from textual import on
 from textual.events import Click
-from stats.programmList import get_latest_process_items_data, start_process_cache_thread, _format_process_item
+from stats.programmList import (
+    get_latest_process_items_data,
+    start_process_cache_thread,
+    _format_process_item,
+)
+from ui.tui.widgets.procInfoWidget import ProcInfoWidget
 
 
 class FastListView(ListView):
@@ -19,6 +24,8 @@ class FastListView(ListView):
         super().watch_index(old_value, new_value)
         if hasattr(self, "on_scroll_cb") and self.on_scroll_cb:
             self.on_scroll_cb()
+        if hasattr(self, "on_highlight_cb") and self.on_highlight_cb:
+            self.on_highlight_cb()
 
 
 class ProgrammListWidget(Container):
@@ -30,6 +37,9 @@ class ProgrammListWidget(Container):
         self.rendered_limit = 0
         self.sort_by = "cpu_ussage"
         self.sort_reverse = True
+        self.current_sorted_data = []
+        self.total_count = 0
+        self.active_info_pid = None
 
     def compose(self):
         self.info_static = Static("Processes: 0", id="programm_list_info")
@@ -41,11 +51,75 @@ class ProgrammListWidget(Container):
 
         self.list_view = FastListView(classes="programm_list_view")
         self.list_view.on_scroll_cb = self.check_expand
+        self.list_view.on_highlight_cb = self.update_details
         yield self.list_view
 
     def on_mount(self):
         start_process_cache_thread(interval=1.5)
+        self.proc_info_box = ProcInfoWidget(id="proc_info_box")
+        self.screen.mount(self.proc_info_box)
         self.update_list()
+
+    def update_info_box_position(self):
+        if hasattr(self, "proc_info_box") and self.proc_info_box:
+            box_width = 30  # matches StatusWidget width
+            self.proc_info_box.styles.offset = (
+                self.region.x + self.size.width - box_width,
+                self.region.y,
+            )
+
+    def on_resize(self):
+        self.update_info_box_position()
+
+    @on(ListView.Selected)
+    def on_list_view_selected(self, event: ListView.Selected) -> None:
+        idx = self.list_view.index
+        if idx is not None and 0 <= idx < len(self.current_sorted_data):
+            d = self.current_sorted_data[idx]
+            pid = d.get("pid")
+            if pid is not None:
+                if self.active_info_pid == pid:
+                    self.active_info_pid = None
+                else:
+                    self.active_info_pid = pid
+                self.update_details()
+
+    @on(ListView.Highlighted)
+    def on_list_view_highlighted(self, event: ListView.Highlighted) -> None:
+        if self.active_info_pid is not None:
+            idx = self.list_view.index
+            if idx is not None and 0 <= idx < len(self.current_sorted_data):
+                d = self.current_sorted_data[idx]
+                pid = d.get("pid")
+                if pid is not None:
+                    self.active_info_pid = pid
+                    self.update_details()
+
+    def update_details(self) -> None:
+        if not hasattr(self, "info_static") or not hasattr(self, "list_view"):
+            return
+
+        self.info_static.update(f"Processes: {self.total_count}")
+
+        if not self.display or self.active_info_pid is None:
+            if hasattr(self, "proc_info_box") and self.proc_info_box:
+                self.proc_info_box.display = False
+            return
+
+        self.update_info_box_position()
+
+        active_data = None
+        for d in self.current_sorted_data:
+            if d.get("pid") == self.active_info_pid:
+                active_data = d
+                break
+
+        if active_data and hasattr(self, "proc_info_box") and self.proc_info_box:
+            self.proc_info_box.update_process(active_data)
+            self.proc_info_box.display = True
+        else:
+            if hasattr(self, "proc_info_box") and self.proc_info_box:
+                self.proc_info_box.display = False
 
     def check_expand(self):
         if not hasattr(self, "list_view"):
@@ -84,11 +158,13 @@ class ProgrammListWidget(Container):
             return
 
         version, count, items_data = get_latest_process_items_data()
+        self.total_count = count
+
         if not force and version == self.last_cache_version:
+            self.update_details()
             return
 
         self.last_cache_version = version
-        self.info_static.update(f"Processes: {count}")
         
         # Sort items_data based on user selection
         if self.sort_by in ["pid", "ram_ussage", "cpu_ussage"]:
@@ -105,6 +181,7 @@ class ProgrammListWidget(Container):
         self.rendered_limit = max(self.rendered_limit, max_visible, needed)
 
         sliced_data = items_data[:self.rendered_limit]
+        self.current_sorted_data = sliced_data
         existing_items = list(self.list_view.query(ListItem))
         new_count = len(sliced_data)
         existing_count = len(existing_items)
@@ -121,3 +198,5 @@ class ProgrammListWidget(Container):
         elif existing_count > new_count:
             for item in existing_items[new_count:]:
                 item.remove()
+
+        self.update_details()
