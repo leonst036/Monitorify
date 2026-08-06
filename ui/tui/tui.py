@@ -16,6 +16,7 @@ from ui.tui.widgets.ramWidget import RamWidget
 from ui.tui.widgets.networkWidget import NetworkWidget
 from ui.tui.components.menu import Menu
 from ui.tui.components.widgetManager import WidgetManager
+from ui.tui.widgets.programmListWidget import ProgrammListWidget
 
 
 class MonitorifyApp(App):
@@ -32,6 +33,7 @@ class MonitorifyApp(App):
         with Container(id="main_container"):
             yield CpuWidget(id="cpu_widget")
             yield RamWidget(id="ram_widget")
+            yield ProgrammListWidget(id="programmList_widget")
             yield NetworkWidget(id="network_widget")
         yield Menu()
         with Center(id="warning_container"):
@@ -64,6 +66,7 @@ class MonitorifyApp(App):
             self.query_one(CpuWidget).update_cpu()
             self.query_one(RamWidget).update_ram()
             self.query_one(NetworkWidget).update_network(interval=self.update_interval)
+            self.query_one(ProgrammListWidget).update_list()
     
     def action_get_window_size(self) -> None:
         is_too_small = self.size.width < 80 or self.size.height < 24

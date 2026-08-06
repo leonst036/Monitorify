@@ -14,7 +14,8 @@ Screen {
 
 CpuWidget,
 RamWidget,
-NetworkWidget {
+NetworkWidget,
+ProgrammListWidget {
     border: round #5c6370;
     border-title-color: #61afef;
     border-title-align: left;
@@ -30,10 +31,35 @@ NetworkWidget {
 /* Dynamic layout handled in Python */
 
 CpuWidget>Static,
-RamWidget>Static {
+RamWidget>Static,
+ProgrammListWidget>Static {
     text-style: bold;
     color: #abb2bf;
     margin-bottom: 1;
+}
+
+#programm_list_view,
+.programm_list_view {
+    height: 1fr;
+    background: transparent;
+    border: none;
+}
+
+#programm_list_view ListItem,
+.programm_list_view ListItem {
+    background: transparent;
+    padding: 0 1;
+}
+
+#programm_list_view ListItem:hover,
+.programm_list_view ListItem:hover {
+    background: #3e4451;
+}
+
+#programm_list_view ListItem.--highlight,
+.programm_list_view ListItem.--highlight {
+    background: #4b5263;
+    color: #61afef;
 }
 
 #network_graph {

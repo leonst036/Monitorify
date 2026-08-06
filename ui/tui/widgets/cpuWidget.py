@@ -20,7 +20,6 @@ class CpuWidget(Container):
 
     def on_mount(self):
         self.status_box = StatusWidget(id="status_box")
-        # Mount to screen so it has absolutely ZERO effect on CpuWidget's internal layout
         self.screen.mount(self.status_box)
 
     def on_resize(self):
