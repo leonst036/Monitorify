@@ -17,21 +17,17 @@ class CpuWidget(Container):
         # Initialize the reusable graph widget
         self.sparkline = BrailleGraph(data_lines=1, color1="#61afef", y_max=100.0, id="cpu_sparkline")
         yield self.sparkline
-        
-        self.status_box = StatusWidget(id="status_box")
-        yield self.status_box
 
     def on_mount(self):
-        self.status_box.styles.position = "absolute"
-        self._reposition_status()
+        self.status_box = StatusWidget(id="status_box")
+        # Mount to screen so it has absolutely ZERO effect on CpuWidget's internal layout
+        self.screen.mount(self.status_box)
 
     def on_resize(self):
-        self._reposition_status()
-
-    def _reposition_status(self):
-        # Place status box in top-right corner of CpuWidget
-        box_width = 30  # matches CSS width
-        self.status_box.styles.offset = (self.size.width - box_width, 0)
+        if hasattr(self, "status_box"):
+            box_width = 30  # matches CSS width
+            # Position relative to screen coordinates
+            self.status_box.styles.offset = (self.region.x + self.size.width - box_width, self.region.y)
 
     def update_cpu(self):
         usage = get_cpu_usage(unit='percent')

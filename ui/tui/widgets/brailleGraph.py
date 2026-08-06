@@ -38,6 +38,8 @@ class BrailleGraph(Widget):
 
         w = width_chars * 2
         h = height_chars * 4
+        with open("/tmp/braille_debug.log", "a") as f:
+            f.write(f"ID: {self.id}, width_chars: {width_chars}, height_chars: {height_chars}, w: {w}, h: {h}\n")
         grid = [[False]*w for _ in range(h)]
         
         data1 = list(self.history1)
@@ -56,7 +58,7 @@ class BrailleGraph(Widget):
                 x = start_x + i
                 idx = len(data1) - num_points + i
                 val = data1[idx]
-                dots = max(self.min_dots, int((val / max_val) * h))
+                dots = max(self.min_dots, round((val / max_val) * h))
                 
                 # Draw up from bottom
                 for y in range(h - dots, h):
