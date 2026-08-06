@@ -14,6 +14,7 @@ from textual.containers import Container, Center, Middle
 from ui.tui.widgets.cpuWidget import CpuWidget
 from ui.tui.widgets.ramWidget import RamWidget
 from ui.tui.widgets.networkWidget import NetworkWidget
+from ui.tui.components.menu import Menu
 
 
 class MonitorifyApp(App):
@@ -23,6 +24,7 @@ class MonitorifyApp(App):
     BINDINGS = [
         ("q", "quit"),
         ("c", "quit"),
+        ("m", "menu")
     ]
 
     def compose(self) -> ComposeResult:
@@ -30,6 +32,7 @@ class MonitorifyApp(App):
             yield CpuWidget()
             yield RamWidget()
             yield NetworkWidget()
+        yield Menu()
         with Center(id="warning_container"):
             with Middle():
                 yield Label("Terminal window is too small!\nPlease resize.", id="warning_label")
@@ -55,6 +58,10 @@ class MonitorifyApp(App):
         else:
             self.query_one("#main_container").display = True
             self.query_one("#warning_container").display = False
+
+    def action_menu(self) -> None:
+        menu = self.query_one(Menu)
+        menu.display = not menu.display
 if __name__ == "__main__":
     app = MonitorifyApp()
     app.run()

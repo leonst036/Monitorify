@@ -8,7 +8,7 @@ from ui.tui.widgets.statusWidget import StatusWidget
 
 
 class CpuWidget(Container):
-    BORDER_TITLE = "CPU"
+    BORDER_TITLE = "CPU │ [bold #c678dd]M[/bold #c678dd]enu   [bold #c678dd]Q[/bold #c678dd]uit"
 
     def compose(self):
         self.cpu_usage_static = Static(f"{get_cpu_usage(unit='percent')}%")

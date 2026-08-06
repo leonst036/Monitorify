@@ -91,3 +91,20 @@ StatusWidget {
     border-title-align: left;
     padding: 0 1;
 }
+
+Menu {
+    display: none;
+    position: absolute;
+    align: center middle;
+    width: 40;
+    height: auto;
+    background: #21252b;
+    border: round #61afef;
+    padding: 1 2;
+}
+
+#menu_title {
+    text-style: bold;
+    color: #61afef;
+    margin-bottom: 1;
+}
