@@ -15,6 +15,7 @@ from ui.tui.widgets.cpuWidget import CpuWidget
 from ui.tui.widgets.ramWidget import RamWidget
 from ui.tui.widgets.networkWidget import NetworkWidget
 from ui.tui.components.menu import Menu
+from ui.tui.components.widgetManager import WidgetManager
 
 
 class MonitorifyApp(App):
@@ -39,7 +40,14 @@ class MonitorifyApp(App):
 
     def on_mount(self) -> None:
         self.action_get_window_size()
+        self.widget_manager = WidgetManager(self.query_one("#main_container"))
+        self.update_layout()
         self.set_interval(1.0, self.update_display)
+
+    def update_layout(self) -> None:
+        """Delegates layout updates to WidgetManager."""
+        if hasattr(self, "widget_manager"):
+            self.widget_manager.update_layout()
 
     def update_display(self) -> None:
         self.action_get_window_size()

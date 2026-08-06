@@ -4,6 +4,7 @@ from textual.widgets.selection_list import Selection
 
 
 class Menu(Container):
+    
     def compose(self):
         with Vertical(id="menu"):
             yield Static("[bold #61afef]M[/bold #61afef]enu", id="menu_title")
@@ -34,6 +35,8 @@ class Menu(Container):
                 widget.display = name in selected_names
             except Exception:
                 pass
+        if hasattr(self.app, "update_layout"):
+            self.app.update_layout()
 
     def get_available_widgets(self) -> dict[str, str]:
         """Returns a map of {widget_name: widget_id} from main_container."""
@@ -67,5 +70,7 @@ class Menu(Container):
             try:
                 widget_to_toggle = self.app.query_one(widget_id)
                 widget_to_toggle.display = not widget_to_toggle.display
+                if hasattr(self.app, "update_layout"):
+                    self.app.update_layout()
             except Exception:
                 pass

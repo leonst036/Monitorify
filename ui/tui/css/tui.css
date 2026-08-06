@@ -27,10 +27,7 @@ NetworkWidget {
     layout: horizontal;
 }
 
-CpuWidget {
-    column-span: 2;
-    /* Span full top row */
-}
+/* Dynamic layout handled in Python */
 
 CpuWidget>Static,
 RamWidget>Static {
@@ -98,8 +95,7 @@ Menu {
     align: center middle;
     width: 40;
     height: auto;
-    background: #21252b;
-    border: round #61afef;
+    border: round #5c6370;
     padding: 1 2;
 }
 
