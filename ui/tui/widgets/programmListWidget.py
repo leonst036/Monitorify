@@ -2,6 +2,8 @@
 from textual.containers import Container
 # pyrefly: ignore [missing-import]
 from textual.widgets import ListItem, ListView, Static
+from textual import on
+from textual.events import Click
 from stats.programmList import get_latest_process_items_data, start_process_cache_thread, _format_process_item
 
 
@@ -26,10 +28,16 @@ class ProgrammListWidget(Container):
         super().__init__(**kwargs)
         self.last_cache_version = -1
         self.rendered_limit = 0
+        self.sort_by = "cpu_ussage"
+        self.sort_reverse = True
 
     def compose(self):
         self.info_static = Static("Processes: 0", id="programm_list_info")
         yield self.info_static
+
+        header_str = f"[bold underline]{'PID':>6}[/bold underline]  [bold underline]{'NAME':<25}[/bold underline] [bold underline]{'RAM(MB)':>10}[/bold underline]  [bold underline]{'CPU(%)':>7}[/bold underline]"
+        self.header_static = Static(header_str, id="programm_list_header")
+        yield self.header_static
 
         self.list_view = FastListView(classes="programm_list_view")
         self.list_view.on_scroll_cb = self.check_expand
@@ -50,6 +58,27 @@ class ProgrammListWidget(Container):
             self.rendered_limit = max(self.rendered_limit, needed + int(height * 4))
             self.update_list(force=True)
 
+    @on(Click, "#programm_list_header")
+    def on_header_click(self, event: Click) -> None:
+        x = event.x
+        new_sort = self.sort_by
+        if x <= 7:
+            new_sort = "pid"
+        elif x <= 34:
+            new_sort = "name"
+        elif x <= 46:
+            new_sort = "ram_ussage"
+        else:
+            new_sort = "cpu_ussage"
+            
+        if self.sort_by == new_sort:
+            self.sort_reverse = not self.sort_reverse
+        else:
+            self.sort_by = new_sort
+            self.sort_reverse = True if new_sort in ["ram_ussage", "cpu_ussage"] else False
+            
+        self.update_list(force=True)
+
     def update_list(self, force: bool = False):
         if not hasattr(self, "info_static") or not hasattr(self, "list_view"):
             return
@@ -60,6 +89,12 @@ class ProgrammListWidget(Container):
 
         self.last_cache_version = version
         self.info_static.update(f"Processes: {count}")
+        
+        # Sort items_data based on user selection
+        if self.sort_by in ["pid", "ram_ussage", "cpu_ussage"]:
+            items_data.sort(key=lambda d: d.get(self.sort_by, 0), reverse=self.sort_reverse)
+        else:
+            items_data.sort(key=lambda d: str(d.get(self.sort_by, "")).lower(), reverse=self.sort_reverse)
 
         height = self.size.height or 20
         max_visible = max(20, int(height * 2.5))
