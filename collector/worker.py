@@ -3,9 +3,12 @@ from threading import Thread
 from stats import cpuStats, ramStats, networkStats, programmList
 from collector.schema import MetricSnapshot
 
+from typing import Callable, Optional
+
 class Worker:
-    def __init__(self, interval: float = 1.0):
+    def __init__(self, interval: float = 1.0, on_data: Optional[Callable[[MetricSnapshot], None]] = None):
         self._interval = interval
+        self._on_data = on_data
         self._running = False
         self._thread = None
 
@@ -21,7 +24,12 @@ class Worker:
 
     def _worker_loop(self):
         while self._running:
-            self.collect()
+            snapshot = self.collect()
+            if self._on_data:
+                try:
+                    self._on_data(snapshot)
+                except Exception as e:
+                    print(f"Error handling metric snapshot: {e}")
             time.sleep(self._interval)
 
     def collect(self) -> MetricSnapshot:

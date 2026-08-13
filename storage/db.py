@@ -1,0 +1,129 @@
+import sqlite3
+import os
+from typing import List, Optional
+from collector.schema import MetricSnapshot
+
+class Database:
+    def __init__(self, path: str = "monitorify.db"):
+        self.path = path
+        self._connection: Optional[sqlite3.Connection] = None
+
+    def connect(self):
+        dir_name = os.path.dirname(self.path)
+        if dir_name and not os.path.exists(dir_name):
+            try:
+                os.makedirs(dir_name, exist_ok=True)
+            except Exception as e:
+                print(f"Error creating directory: {e}")
+
+        # check_same_thread=False enables background worker threads to write safely
+        self._connection = sqlite3.connect(self.path, check_same_thread=False)
+        self._connection.row_factory = sqlite3.Row
+        self._connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS metrics (
+                timestamp REAL PRIMARY KEY,
+                cpu REAL,
+                ram REAL,
+                network_rx REAL,
+                network_tx REAL,
+                processes_count INTEGER
+            )
+            """
+        )
+        self._connection.commit()
+
+    def disconnect(self):
+        if self._connection:
+            self._connection.close()
+            self._connection = None
+
+    def __enter__(self):
+        self.connect()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.disconnect()
+
+    def _ensure_connected(self):
+        if self._connection is None:
+            self.connect()
+
+    def save(self, metric_snapshot: MetricSnapshot):
+        self._ensure_connected()
+        try:
+            self._connection.execute(
+                """
+                INSERT INTO metrics (timestamp, cpu, ram, network_rx, network_tx, processes_count)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    metric_snapshot.timestamp,
+                    metric_snapshot.cpu,
+                    metric_snapshot.ram,
+                    metric_snapshot.network[0],
+                    metric_snapshot.network[1],
+                    metric_snapshot.processes_count,
+                )
+            )
+            self._connection.commit()
+        except Exception as e:
+            print(f"Error saving metrics: {e}")
+
+    def get_history(self, limit: int = 100, start_time: Optional[float] = None, end_time: Optional[float] = None) -> List[MetricSnapshot]:
+        """Fetch historical metric snapshots."""
+        self._ensure_connected()
+        query = "SELECT timestamp, cpu, ram, network_rx, network_tx, processes_count FROM metrics"
+        params = []
+        conditions = []
+
+        if start_time is not None:
+            conditions.append("timestamp >= ?")
+            params.append(start_time)
+        if end_time is not None:
+            conditions.append("timestamp <= ?")
+            params.append(end_time)
+
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+
+        query += " ORDER BY timestamp DESC LIMIT ?"
+        params.append(limit)
+
+        try:
+            cursor = self._connection.cursor()
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
+            
+            snapshots = []
+            for row in reversed(rows):  # Return chronological order
+                snapshots.append(
+                    MetricSnapshot(
+                        timestamp=row["timestamp"],
+                        cpu=row["cpu"],
+                        ram=row["ram"],
+                        network=(row["network_rx"], row["network_tx"]),
+                        processes_count=row["processes_count"]
+                    )
+                )
+            return snapshots
+        except Exception as e:
+            print(f"Error fetching history: {e}")
+            return []
+
+    def get_latest(self) -> Optional[MetricSnapshot]:
+        """Fetch the most recent metric snapshot."""
+        history = self.get_history(limit=1)
+        return history[0] if history else None
+
+    def prune_old_metrics(self, max_age_seconds: float):
+        """Remove metrics older than specified seconds."""
+        self._ensure_connected()
+        cutoff_time = os.time.time() if hasattr(os, 'time') else sqlite3.connect  # time reference
+        import time
+        cutoff = time.time() - max_age_seconds
+        try:
+            self._connection.execute("DELETE FROM metrics WHERE timestamp < ?", (cutoff,))
+            self._connection.commit()
+        except Exception as e:
+            print(f"Error pruning metrics: {e}")
