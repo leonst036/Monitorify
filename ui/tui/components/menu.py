@@ -23,8 +23,28 @@ HISTORY_OPTIONS: list[tuple[str, float | None]] = [
 ]
 
 
+def parse_duration(text: str) -> float | None:
+    """Parse a human-readable duration string into seconds.
+    Examples: '120s', '2h', '1d', '30m', '1w'.
+    Returns None if the string cannot be parsed.
+    """
+    text = text.strip().lower()
+    units = {"s": 1, "m": 60, "h": 3600, "d": 86400, "w": 604800}
+    for suffix, multiplier in units.items():
+        if text.endswith(suffix):
+            try:
+                return float(text[:-1]) * multiplier
+            except ValueError:
+                return None
+    # Plain number — treat as seconds
+    try:
+        return float(text)
+    except ValueError:
+        return None
+
+
 class Menu(Container):
-    
+
     def compose(self):
         with Vertical(id="menu"):
             yield Static("[bold #61afef]M[/bold #61afef]enu", id="menu_title")
@@ -44,17 +64,13 @@ class Menu(Container):
                 id="history_select",
                 allow_blank=False,
             )
-            # Render custom history input
             yield Input(
-                placeholder="Duration e.g. 120s, 2h, 1d, 1wm",
+                placeholder="Duration e.g. 120s, 2h, 1d, 1w",
                 id="custom_history_input",
             )
 
     def on_mount(self) -> None:
-        # Hide custom input initially
-        custom_input = self.query_one("#custom_history_input", Input)
-        custom_input.display = False
-
+        self.query_one("#custom_history_input", Input).display = False
         self.populate_menu()
 
     def populate_menu(self) -> None:
@@ -87,10 +103,29 @@ class Menu(Container):
         elif event.select.id == "history_select":
             custom_input = self.query_one("#custom_history_input", Input)
             is_custom = event.value is None
-            
             custom_input.display = is_custom
             if is_custom:
                 custom_input.focus()
+            else:
+                # Apply the selected preset duration
+                if hasattr(self.app, "set_history_duration"):
+                    self.app.set_history_duration(float(event.value))
+
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        """Parses and applies custom history duration on Enter."""
+        if event.input.id != "custom_history_input":
+            return
+        duration = parse_duration(event.value)
+        if duration is not None and duration > 0:
+            if hasattr(self.app, "set_history_duration"):
+                self.app.set_history_duration(duration)
+            # Return focus to the selection list so the user isn't trapped
+            try:
+                self.query_one(SelectionList).focus()
+            except Exception:
+                pass
+        else:
+            event.input.placeholder = "Invalid — try: 120s, 2h, 1d, 1w"
 
     def on_selection_list_selected_changed(self, event: SelectionList.SelectedChanged) -> None:
         """Toggles widget visibility based on selection changes."""
@@ -132,7 +167,6 @@ class Menu(Container):
         if widget_id:
             if not widget_id.startswith("#"):
                 widget_id = f"#{widget_id}"
-
             try:
                 widget_to_toggle = self.app.query_one(widget_id)
                 widget_to_toggle.display = not widget_to_toggle.display
@@ -140,3 +174,7 @@ class Menu(Container):
                     self.app.update_layout()
             except Exception:
                 pass
+
+    def get_history_duration(self) -> float | None:
+        """Returns the currently selected history duration in seconds."""
+        return self.query_one("#history_select").value
