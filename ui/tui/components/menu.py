@@ -1,5 +1,8 @@
+# pyrefly: ignore [missing-import]
 from textual.containers import Container, Vertical
-from textual.widgets import SelectionList, Static, Select
+# pyrefly: ignore [missing-import]
+from textual.widgets import SelectionList, Static, Select, Input
+# pyrefly: ignore [missing-import]
 from textual.widgets.selection_list import Selection
 
 INTERVAL_OPTIONS: list[tuple[str, float]] = [
@@ -8,6 +11,15 @@ INTERVAL_OPTIONS: list[tuple[str, float]] = [
     ("1.00s", 1.0),
     ("2.00s", 2.0),
     ("5.00s", 5.0),
+]
+
+HISTORY_OPTIONS: list[tuple[str, float | None]] = [
+    ("1m", 60.0),
+    ("5m", 300.0),
+    ("10m", 600.0),
+    ("30m", 1800.0),
+    ("1h", 3600.0),
+    ("custom", None)
 ]
 
 
@@ -25,8 +37,24 @@ class Menu(Container):
                 id="interval_select",
                 allow_blank=False,
             )
+            yield Static("[bold #abb2bf]History Duration:[/bold #abb2bf]", classes="menu_label")
+            yield Select(
+                options=HISTORY_OPTIONS,
+                value=60.0,
+                id="history_select",
+                allow_blank=False,
+            )
+            # Render custom history input
+            yield Input(
+                placeholder="Duration e.g. 120s, 2h, 1d, 1wm",
+                id="custom_history_input",
+            )
 
     def on_mount(self) -> None:
+        # Hide custom input initially
+        custom_input = self.query_one("#custom_history_input", Input)
+        custom_input.display = False
+
         self.populate_menu()
 
     def populate_menu(self) -> None:
@@ -51,10 +79,18 @@ class Menu(Container):
             pass
 
     def on_select_changed(self, event: Select.Changed) -> None:
-        """Handles changes in the update interval selector."""
+        """Handles changes in the update interval and history duration selectors."""
         if event.select.id == "interval_select" and event.value is not Select.BLANK:
             if hasattr(self.app, "set_update_interval"):
                 self.app.set_update_interval(float(event.value))
+
+        elif event.select.id == "history_select":
+            custom_input = self.query_one("#custom_history_input", Input)
+            is_custom = event.value is None
+            
+            custom_input.display = is_custom
+            if is_custom:
+                custom_input.focus()
 
     def on_selection_list_selected_changed(self, event: SelectionList.SelectedChanged) -> None:
         """Toggles widget visibility based on selection changes."""
