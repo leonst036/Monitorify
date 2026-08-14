@@ -5,8 +5,7 @@ Screen {
 
 #main_container {
     layout: grid;
-    grid-size: 2 2;
-    grid-rows: 1fr 1fr;
+    grid-size: 2;
     grid-columns: 1fr 1fr;
     height: 100%;
     width: 100%;
@@ -15,7 +14,8 @@ Screen {
 CpuWidget,
 RamWidget,
 NetworkWidget,
-ProgrammListWidget {
+ProgrammListWidget,
+DiskWidget {
     border: round #5c6370;
     border-title-color: #61afef;
     border-title-align: left;
@@ -24,7 +24,8 @@ ProgrammListWidget {
     height: 100%;
 }
 
-NetworkWidget {
+NetworkWidget,
+DiskWidget {
     layout: horizontal;
 }
 
@@ -62,19 +63,22 @@ ProgrammListWidget>Static {
     color: #61afef;
 }
 
-#network_graph {
+#network_graph,
+#disk_graph {
     width: 1fr;
     height: 100%;
 }
 
-#network_info_wrapper {
+#network_info_wrapper,
+#disk_info_wrapper {
     width: 26;
     height: 100%;
     align: center middle;
     margin-left: 1;
 }
 
-#network_info {
+#network_info,
+#disk_info {
     width: 100%;
     height: auto;
     border: round #5c6370;
@@ -85,7 +89,8 @@ ProgrammListWidget>Static {
     padding: 0 1;
 }
 
-#network_info Static {
+#network_info Static,
+#disk_info Static {
     text-style: bold;
 }
 
@@ -95,6 +100,10 @@ ProgrammListWidget>Static {
 
 .tx_text {
     color: #c678dd;
+}
+
+.storage_text {
+    color: #98c379;
 }
 
 HistorySparkline {
@@ -139,7 +148,7 @@ Menu {
 }
 
 #widget_selector {
-    height: 5;
+    height: 6;
 }
 
 #interval_select {

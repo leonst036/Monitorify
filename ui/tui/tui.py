@@ -15,6 +15,7 @@ from textual.containers import Container, Center, Middle
 from ui.tui.widgets.cpuWidget import CpuWidget
 from ui.tui.widgets.ramWidget import RamWidget
 from ui.tui.widgets.networkWidget import NetworkWidget
+from ui.tui.widgets.diskWidget import DiskWidget
 from ui.tui.components.menu import Menu
 from ui.tui.components.widgetManager import WidgetManager
 from ui.tui.widgets.programmListWidget import ProgrammListWidget
@@ -48,6 +49,7 @@ class MonitorifyApp(App):
             yield RamWidget(id="ram_widget")
             yield ProgrammListWidget(id="programmList_widget")
             yield NetworkWidget(id="network_widget")
+            yield DiskWidget(id="disk_widget")
         yield Menu()
         with Center(id="warning_container"):
             with Middle():
@@ -89,6 +91,10 @@ class MonitorifyApp(App):
             pass
         try:
             self.query_one(NetworkWidget).load_history(snapshots, time_span=seconds)
+        except Exception:
+            pass
+        try:
+            self.query_one(DiskWidget).load_history(snapshots, time_span=seconds)
         except Exception:
             pass
 
@@ -139,6 +145,13 @@ class MonitorifyApp(App):
                 self.query_one(NetworkWidget).update_network(snapshot)
             else:
                 self.query_one(NetworkWidget).update_labels(snapshot)
+        except Exception:
+            pass
+        try:
+            if graph_refresh_due:
+                self.query_one(DiskWidget).update_disk(snapshot)
+            else:
+                self.query_one(DiskWidget).update_labels(snapshot)
         except Exception:
             pass
         try:
