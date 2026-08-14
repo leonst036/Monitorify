@@ -18,94 +18,46 @@ Built with Python and [Textual](https://github.com/Textualize/textual). Reads di
 
 ---
 
-## Installation
-
-### Method 1: Using `pipx` (Recommended for Linux CLI tools)
-
-[pipx](https://pypa.github.io/pipx/) installs Monitorify in an isolated environment and makes the `monitorify` command globally available:
+## Quick Start
 
 ```bash
-# Install directly from GitHub
+# Recommended — isolated install via pipx
 pipx install git+https://github.com/leonst036/Monitorify.git
 
-# Or if published on PyPI
-pipx install monitorify
+# Then launch the dashboard
+monitorify
 ```
 
-To update later:
-```bash
-pipx upgrade monitorify
-```
-
-*(You can also use `uv tool install git+https://github.com/leonst036/Monitorify.git`)*
-
----
-
-### Method 2: Development / From Source
-
-```bash
-# Clone the repository
-git clone https://github.com/leonst036/Monitorify.git
-cd Monitorify
-
-# Create and activate a virtual environment
-python -m venv .venv
-source .venv/bin/activate
-
-# Install in editable mode
-pip install -e .
-```
+> For full installation options (pip, source, systemd daemon) see **[INSTALL.md](INSTALL.md)**.
 
 ---
 
 ## Usage
 
-### Run the Dashboard
+### Dashboard
 
 ```bash
 monitorify
 ```
 
-* Press **`m`** to open the settings menu (toggle widgets, set intervals, change history window).
-* Press **`q`** or **`c`** to quit.
+| Key | Action |
+|-----|--------|
+| `m` | Open settings menu (toggle widgets, set intervals, change history window) |
+| `q` / `c` | Quit |
 
----
-
-### Standalone Background Collector Daemon
-
-Monitorify includes a background collector daemon that records metrics continuously to SQLite:
+### Standalone Background Daemon
 
 ```bash
 monitorify-daemon
 ```
 
-#### Optional: 24/7 Always-On Service (systemd user service)
-
-To collect system metrics 24/7 in the background even when the dashboard is closed, create `~/.config/systemd/user/monitorify.service`:
-
-```ini
-[Unit]
-Description=Monitorify Metrics Collector Daemon
-
-[Service]
-ExecStart=%h/.local/bin/monitorify-daemon
-Restart=always
-
-[Install]
-WantedBy=default.target
-```
-
-Enable and start it with:
-```bash
-systemctl --user daemon-reload
-systemctl --user enable --now monitorify
-```
+Metrics are written to `~/.local/share/monitorify/monitorify.db` continuously.
 
 ---
 
 ## Configuration & Paths
 
-Monitorify adheres to standard Linux XDG base directories:
+Monitorify follows XDG base directory conventions:
 
 | Purpose | Default Path | Environment Variable |
 |---|---|---|
@@ -121,7 +73,8 @@ Monitorify adheres to standard Linux XDG base directories:
 ```
 Monitorify/
 ├── pyproject.toml               # Package build configuration & entry points
-├── README.md                    # Documentation
+├── README.md                    # This file
+├── INSTALL.md                   # Full installation guide
 ├── main.py                      # Developer entrypoint shim
 ├── src/
 │   └── monitorify/

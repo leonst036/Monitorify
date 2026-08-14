@@ -3,9 +3,10 @@ import json
 import os
 from typing import List, Optional
 from monitorify.collector.schema import MetricSnapshot
+from monitorify import config
 
 class Database:
-    def __init__(self, path: str = "monitorify.db"):
+    def __init__(self, path: str = config.DB_PATH):
         self.path = path
         self._connection: Optional[sqlite3.Connection] = None
 
