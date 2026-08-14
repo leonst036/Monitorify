@@ -1,7 +1,7 @@
 import time
 from threading import Thread
-from stats import cpuStats, ramStats, networkStats, programmList, DiskStats
-from collector.schema import MetricSnapshot
+from monitorify.stats import cpuStats, ramStats, networkStats, programmList, DiskStats
+from monitorify.collector.schema import MetricSnapshot
 
 from typing import Callable, Optional
 

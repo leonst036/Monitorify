@@ -2,25 +2,20 @@ import time
 import sys
 from pathlib import Path
 
-# Add project root to sys.path if running script directly
-project_root = Path(__file__).resolve().parents[3]
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
-
 # pyrefly: ignore [missing-import]
 from textual.app import App, ComposeResult
 # pyrefly: ignore [missing-import]
 from textual.widgets import Header, Footer, Label
 from textual.containers import Container, Center, Middle
-from ui.tui.widgets.cpuWidget import CpuWidget
-from ui.tui.widgets.ramWidget import RamWidget
-from ui.tui.widgets.networkWidget import NetworkWidget
-from ui.tui.widgets.diskWidget import DiskWidget
-from ui.tui.components.menu import Menu
-from ui.tui.components.widgetManager import WidgetManager
-from ui.tui.widgets.programmListWidget import ProgrammListWidget
-from storage import Database
-import config
+from monitorify.ui.tui.widgets.cpuWidget import CpuWidget
+from monitorify.ui.tui.widgets.ramWidget import RamWidget
+from monitorify.ui.tui.widgets.networkWidget import NetworkWidget
+from monitorify.ui.tui.widgets.diskWidget import DiskWidget
+from monitorify.ui.tui.components.menu import Menu
+from monitorify.ui.tui.components.widgetManager import WidgetManager
+from monitorify.ui.tui.widgets.programmListWidget import ProgrammListWidget
+from monitorify.storage import Database
+from monitorify import config
 
 
 class MonitorifyApp(App):

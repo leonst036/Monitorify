@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "monitorify"
+version = "0.1.0"
+description = "A lightweight Linux terminal system monitor built with Textual"
+readme = "README.md"
+authors = [
+    { name = "Leon" }
+]
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "textual>=0.80.0",
+    "platformdirs>=4.0.0",
+    "rich>=13.0.0",
+]
+
+[project.scripts]
+monitorify = "monitorify.main:cli"
+monitorify-daemon = "monitorify.daemon:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"monitorify.ui.tui" = ["css/*.css"]

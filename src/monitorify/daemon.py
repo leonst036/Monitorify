@@ -1,9 +1,9 @@
 import time
 import signal
 import sys
-from collector import Manager
-from storage import Database
-import config
+from monitorify.collector import Manager
+from monitorify.storage import Database
+from monitorify import config
 
 
 def main():
@@ -20,7 +20,9 @@ def main():
     signal.signal(signal.SIGTERM, signal_handler)
 
     manager.start()
-    print(f"Metrics collector running (Interval: {config.DEFAULT_COLLECTION_INTERVAL}s, DB: {config.DB_PATH}). Press Ctrl+C to stop.")
+    print(
+        f"Metrics collector running (Interval: {config.DEFAULT_COLLECTION_INTERVAL}s, DB: {config.DB_PATH}). Press Ctrl+C to stop."
+    )
 
     while True:
         time.sleep(1)

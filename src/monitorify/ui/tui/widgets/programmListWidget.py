@@ -4,12 +4,12 @@ from textual.containers import Container
 from textual.widgets import ListItem, ListView, Static
 from textual import on
 from textual.events import Click
-from stats.programmList import (
+from monitorify.stats.programmList import (
     get_latest_process_items_data,
     start_process_cache_thread,
     _format_process_item,
 )
-from ui.tui.widgets.procInfoWidget import ProcInfoWidget
+from monitorify.ui.tui.widgets.procInfoWidget import ProcInfoWidget
 
 
 class FastListView(ListView):

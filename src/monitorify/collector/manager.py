@@ -1,5 +1,5 @@
 from typing import List, Optional, Any, Callable
-from collector.worker import Worker
+from monitorify.collector.worker import Worker
 
 
 class Manager:
@@ -7,7 +7,7 @@ class Manager:
         self._workers: List[Worker] = []
         self._interval = interval
         if db is None:
-            from storage.db import Database
+            from monitorify.storage.db import Database
             self._db = Database()
         else:
             self._db = db

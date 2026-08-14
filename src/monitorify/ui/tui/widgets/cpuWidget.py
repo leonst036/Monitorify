@@ -2,8 +2,8 @@
 from textual.widgets import Static
 # pyrefly: ignore [missing-import]
 from textual.containers import Container, Vertical
-from ui.tui.widgets.brailleGraph import BrailleGraph, make_time_grid
-from ui.tui.widgets.statusWidget import StatusWidget
+from monitorify.ui.tui.widgets.brailleGraph import BrailleGraph, make_time_grid
+from monitorify.ui.tui.widgets.statusWidget import StatusWidget
 
 
 class CpuWidget(Container):

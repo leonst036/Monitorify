@@ -2,7 +2,7 @@
 from textual.containers import Container
 # pyrefly: ignore [missing-import]
 from textual.widgets import Static
-from stats.programmList import get_process_state, get_process_running_time
+from monitorify.stats.programmList import get_process_state, get_process_running_time
 
 
 class ProcInfoWidget(Container):

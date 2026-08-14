@@ -2,7 +2,7 @@
 from textual.widgets import Static
 # pyrefly: ignore [missing-import]
 from textual.containers import Container, Vertical
-from ui.tui.widgets.brailleGraph import BrailleGraph, make_time_grid
+from monitorify.ui.tui.widgets.brailleGraph import BrailleGraph, make_time_grid
 
 
 def format_bps(bps: float) -> str:

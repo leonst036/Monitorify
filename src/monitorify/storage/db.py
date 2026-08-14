@@ -2,7 +2,7 @@ import sqlite3
 import json
 import os
 from typing import List, Optional
-from collector.schema import MetricSnapshot
+from monitorify.collector.schema import MetricSnapshot
 
 class Database:
     def __init__(self, path: str = "monitorify.db"):
