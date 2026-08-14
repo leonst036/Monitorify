@@ -21,7 +21,7 @@
 # Install from GitHub
 pipx install git+https://github.com/leonst036/Monitorify.git
 
-# Or, once published on PyPI
+# Or from pypi
 pipx install monitorify
 ```
 
