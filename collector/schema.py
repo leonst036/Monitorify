@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, Optional
 
 @dataclass
 class NetworkMetrics:
@@ -13,7 +13,10 @@ class MetricSnapshot:
     ram: float
     network: Tuple[float, float]
     processes_count: int
+    disk_io: Optional[Dict[str, Any]] = None
+    disk_storage: Optional[Dict[str, Any]] = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Converts the dataclass object into a standard dictionary."""
         return asdict(self)
+

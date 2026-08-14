@@ -1,4 +1,5 @@
 import sqlite3
+import json
 import os
 from typing import List, Optional
 from collector.schema import MetricSnapshot
@@ -27,10 +28,22 @@ class Database:
                 ram REAL,
                 network_rx REAL,
                 network_tx REAL,
-                processes_count INTEGER
+                processes_count INTEGER,
+                disk_io TEXT,
+                disk_storage TEXT
             )
             """
         )
+        self._connection.commit()
+
+        # Migrate existing table schema if columns are missing
+        cursor = self._connection.cursor()
+        cursor.execute("PRAGMA table_info(metrics)")
+        columns = [row["name"] for row in cursor.fetchall()]
+        if "disk_io" not in columns:
+            self._connection.execute("ALTER TABLE metrics ADD COLUMN disk_io TEXT")
+        if "disk_storage" not in columns:
+            self._connection.execute("ALTER TABLE metrics ADD COLUMN disk_storage TEXT")
         self._connection.commit()
 
     def disconnect(self):
@@ -52,10 +65,13 @@ class Database:
     def save(self, metric_snapshot: MetricSnapshot):
         self._ensure_connected()
         try:
+            disk_io_json = json.dumps(metric_snapshot.disk_io) if metric_snapshot.disk_io is not None else None
+            disk_storage_json = json.dumps(metric_snapshot.disk_storage) if metric_snapshot.disk_storage is not None else None
+
             self._connection.execute(
                 """
-                INSERT INTO metrics (timestamp, cpu, ram, network_rx, network_tx, processes_count)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO metrics (timestamp, cpu, ram, network_rx, network_tx, processes_count, disk_io, disk_storage)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     metric_snapshot.timestamp,
@@ -64,6 +80,8 @@ class Database:
                     metric_snapshot.network[0],
                     metric_snapshot.network[1],
                     metric_snapshot.processes_count,
+                    disk_io_json,
+                    disk_storage_json,
                 )
             )
             self._connection.commit()
@@ -73,7 +91,7 @@ class Database:
     def get_history(self, limit: int = 100, start_time: Optional[float] = None, end_time: Optional[float] = None) -> List[MetricSnapshot]:
         """Fetch historical metric snapshots."""
         self._ensure_connected()
-        query = "SELECT timestamp, cpu, ram, network_rx, network_tx, processes_count FROM metrics"
+        query = "SELECT timestamp, cpu, ram, network_rx, network_tx, processes_count, disk_io, disk_storage FROM metrics"
         params = []
         conditions = []
 
@@ -97,19 +115,25 @@ class Database:
             
             snapshots = []
             for row in reversed(rows):  # Return chronological order
+                disk_io = json.loads(row["disk_io"]) if ("disk_io" in row.keys() and row["disk_io"]) else None
+                disk_storage = json.loads(row["disk_storage"]) if ("disk_storage" in row.keys() and row["disk_storage"]) else None
+
                 snapshots.append(
                     MetricSnapshot(
                         timestamp=row["timestamp"],
                         cpu=row["cpu"],
                         ram=row["ram"],
                         network=(row["network_rx"], row["network_tx"]),
-                        processes_count=row["processes_count"]
+                        processes_count=row["processes_count"],
+                        disk_io=disk_io,
+                        disk_storage=disk_storage,
                     )
                 )
             return snapshots
         except Exception as e:
             print(f"Error fetching history: {e}")
             return []
+
 
     def get_latest(self) -> Optional[MetricSnapshot]:
         """Fetch the most recent metric snapshot."""

@@ -1,6 +1,6 @@
 import time
 from threading import Thread
-from stats import cpuStats, ramStats, networkStats, programmList
+from stats import cpuStats, ramStats, networkStats, programmList, DiskStats
 from collector.schema import MetricSnapshot
 
 from typing import Callable, Optional
@@ -38,5 +38,7 @@ class Worker:
             cpu=cpuStats.get_cpu_usage(),
             ram=ramStats.get_ram_usage(),
             network=networkStats.get_network_usage(),
-            processes_count=len(programmList.get_process_list())
+            processes_count=len(programmList.get_process_list()),
+            disk_io=DiskStats.get_disk_IO(),
+            disk_storage=DiskStats.get_disk_storage(),
         )
