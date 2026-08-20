@@ -1,20 +1,20 @@
 # Monitorify
 
-A lightweight system monitor that runs right in your terminal. It tracks CPU usage, memory consumption, network activity, disk metrics, and process states in real time with historical graphing — no bloated dependencies, just a clean, high-performance TUI dashboard.
+A system monitor that runs right in your terminal. It tracks CPU usage, memory consumption, network activity, disk metrics, and process states in real time with historical graphing.
 
-Built with Python and [Textual](https://github.com/Textualize/textual). Reads directly from `/proc` and `/sys` for lightning-fast, native performance on Linux.
+Built with Python and [Textual](https://github.com/Textualize/textual). Reads from `/proc` and `/sys` for native performance on Linux.
 
 ---
 
 ## Features
 
-* **CPU & System Info** — Live CPU percentage, multi-timeframe braille graphing, OS kernel, hostname, and system uptime.
+* **CPU & System Info** — Live CPU percentage, OS kernel, hostname, and system uptime.
 * **Memory (RAM)** — Real-time memory utilization, percentage, and historical graph.
-* **Network Throughput** — Split-view upload/download graph with current speed, peak throughput, and total transferred bytes.
+* **Network Throughput** — Split-view upload/download graph.
 * **Disk Metrics** — I/O activity rates (reads/writes) and storage capacity breakdown for physical disks.
-* **Process Monitor** — Interactive list of running processes with CPU/RAM metrics, process state, uptime, and real-time inspector.
-* **Background Collector Daemon** — Lightweight collector logging metrics to an SQLite database (`~/.local/share/monitorify/monitorify.db`) with automatic pruning.
-* **Customizable Menu (`m`)** — Toggle widget visibility, adjust collection frequency, and set history graph duration (1m, 5m, 10m, 30m, 1h, or custom durations like `2h`, `1d`).
+* **Process Monitor** — Interactive list of running processes with CPU/RAM metrics
+* **Background Collector Daemon** — Collector logging metrics to an SQLite database (`~/.local/share/monitorify/monitorify.db`) with automatic pruning.
+* **Customizable Menu (`m`)** — Toggle widget visibility, adjust collection frequency, and set history graph duration.
 
 ---
 
@@ -74,25 +74,25 @@ Monitorify follows XDG base directory conventions:
 Monitorify/
 ├── pyproject.toml               # Package build configuration & entry points
 ├── README.md                    # This file
-├── INSTALL.md                   # Full installation guide
-├── main.py                      # Developer entrypoint shim
+├── INSTALL.md                   
+├── main.py                      
 ├── src/
 │   └── monitorify/
-│       ├── __init__.py          # Package metadata (__version__)
-│       ├── __main__.py          # python -m monitorify entrypoint
-│       ├── config.py            # XDG path handling & environment settings
-│       ├── main.py              # Dashboard runner & daemon supervisor
-│       ├── daemon.py            # Standalone metrics collector daemon
-│       ├── collector/
-│       │   ├── manager.py       # Worker lifecycle coordinator
-│       │   ├── worker.py        # Background metric collection thread
-│       │   └── schema.py        # Dataclass metric structures
-│       ├── stats/
-│       │   ├── cpuStats.py      # /proc/stat CPU calculator
-│       │   ├── ramStats.py      # /proc/meminfo RAM calculator
-│       │   ├── networkStats.py  # /proc/net/dev throughput calculator
-│       │   ├── DiskStats.py     # /proc/diskstats I/O & storage parser
-│       │   └── programmList.py  # /proc process parser & cache thread
+│       ├── __init__.py          
+│       ├── __main__.py          
+│       ├── config.py            
+│       ├── main.py              
+│       ├── daemon.py            
+│       ├── collector/           # Background collector daemon
+│       │   ├── manager.py       
+│       │   ├── worker.py        
+│       │   └── schema.py        
+│       ├── stats/               # CPU, RAM, Network, Disk & Process Stats
+│       │   ├── cpuStats.py      
+│       │   ├── ramStats.py      
+│       │   ├── networkStats.py  
+│       │   ├── DiskStats.py     
+│       │   └── programmList.py  
 │       ├── storage/
 │       │   └── db.py            # SQLite metrics storage & historical queries
 │       └── ui/
@@ -101,17 +101,17 @@ Monitorify/
 │               ├── css/
 │               │   └── tui.css  # TUI styling & themes
 │               ├── components/
-│               │   ├── menu.py          # Settings sidebar component
-│               │   └── widgetManager.py # Dynamic grid layout organizer
-│               └── widgets/
-│                   ├── brailleGraph.py       # High-density Unicode graph
-│                   ├── cpuWidget.py          # CPU monitor widget
-│                   ├── ramWidget.py          # RAM monitor widget
-│                   ├── networkWidget.py      # Network monitor widget
-│                   ├── diskWidget.py         # Disk I/O & storage widget
-│                   ├── programmListWidget.py # Interactive process list
-│                   ├── procInfoWidget.py     # Process details panel
-│                   └── statusWidget.py       # Host & kernel status
+│               │   ├── menu.py         
+│               │   └── widgetManager.py 
+│               └── widgets/     # widgets for tui
+│                   ├── brailleGraph.py       
+│                   ├── cpuWidget.py          
+│                   ├── ramWidget.py         
+│                   ├── networkWidget.py     
+│                   ├── diskWidget.py         
+│                   ├── programmListWidget.py 
+│                   ├── procInfoWidget.py     
+│                   └── statusWidget.py       
 ```
 
 ---
