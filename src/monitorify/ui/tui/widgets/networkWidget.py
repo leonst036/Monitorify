@@ -63,7 +63,7 @@ class NetworkWidget(Container):
             yield self.network_info
 
     def update_network(self, snapshot) -> None:
-        """Update labels and append one live data point to the graph."""
+        """Update labels and append one live data point to the graph"""
         rx_bps, tx_bps = snapshot.network
         self.top_rx = max(self.top_rx, rx_bps)
         self.top_tx = max(self.top_tx, tx_bps)
@@ -71,7 +71,7 @@ class NetworkWidget(Container):
         self.network_graph.update_value(rx_bps, tx_bps)
 
     def update_labels(self, snapshot) -> None:
-        """Update only the text labels — does not touch the graph."""
+        """Update only the text labels"""
         rx_bps, tx_bps = snapshot.network
         self.top_rx = max(self.top_rx, rx_bps)
         self.top_tx = max(self.top_tx, tx_bps)
@@ -85,7 +85,7 @@ class NetworkWidget(Container):
         info.tx_top.update(f"▲ Top: {format_bps(self.top_tx)}")
 
     def load_history(self, snapshots: list, time_span: float = 0.0) -> None:
-        """Bulk-load network history, time-positioned to show real gaps."""
+        """Bulk-load network history"""
         w = self.network_graph.size.width * 2 or 400
         rx_vals = make_time_grid(snapshots, lambda s: s.network[0], time_span, w)
         tx_vals = make_time_grid(snapshots, lambda s: s.network[1], time_span, w)

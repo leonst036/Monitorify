@@ -30,12 +30,11 @@ class MonitorifyApp(App):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # Read-only DB connection — data is written by the daemon
+        # Read-only DB connection
         self.db = Database(config.DB_PATH)
         self.db.connect()
         # Default history window: 1 minute
         self.history_duration: float = 60.0
-        # Tracks when graphs were last refreshed (for long-window throttling)
         self._last_graph_refresh: float = 0.0
 
     def compose(self) -> ComposeResult:
@@ -99,12 +98,6 @@ class MonitorifyApp(App):
             self.widget_manager.update_layout()
 
     def update_display(self) -> None:
-        """Fetch the latest snapshot and update widgets.
-
-        Text labels always update every tick for a live feel.
-        Graphs are only updated when at least one visual slot worth of time
-        has passed — prevents meaningless scrolling on long history windows.
-        """
         self.action_get_window_size()
 
         if not self.query_one("#main_container").display:
@@ -115,10 +108,8 @@ class MonitorifyApp(App):
             return
 
         now = time.time()
-        # Approximate visual width in braille columns
         approx_graph_w = max(1, self.size.width * 2)
         slot_secs = self.history_duration / approx_graph_w
-        # Graphs update at most once per visual slot, but at least as often as update_interval
         graph_refresh_due = (now - self._last_graph_refresh) >= max(slot_secs, self.update_interval)
 
         try:

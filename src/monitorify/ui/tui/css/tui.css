@@ -29,7 +29,6 @@ DiskWidget {
     layout: horizontal;
 }
 
-/* Dynamic layout handled in Python */
 
 CpuWidget>Static,
 RamWidget>Static,

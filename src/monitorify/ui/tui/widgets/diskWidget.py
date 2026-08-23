@@ -169,7 +169,7 @@ class DiskWidget(Container):
         self.disk_graph.update_value(write_bps, read_bps)
 
     def update_labels(self, snapshot) -> None:
-        """Update only the text labels — does not touch the graph."""
+        """Update only the text labels"""
         read_bps, write_bps = self._calculate_rates(snapshot)
         self.top_read = max(self.top_read, read_bps)
         self.top_write = max(self.top_write, write_bps)

@@ -10,7 +10,7 @@ def get_real_disks() -> list:
                 continue
             
             disk_name = parts[2]
-            # Check if it is a real physical disk (not a partition or virtual device)
+            # Check if it is a real physical disk
             if not os.path.exists(f"/sys/block/{disk_name}/device"):
                 continue
             
@@ -32,7 +32,6 @@ def get_disk_IO(disks: list = None) -> dict:
             
             disk_name = parts[2]
             if disk_name in disks:
-                # Sector size in Linux is 512 bytes
                 read_bytes = int(parts[5]) * 512
                 write_bytes = int(parts[9]) * 512
                 disk_io[disk_name] = {
@@ -60,7 +59,7 @@ def get_disk_storage(disks: list = None) -> dict:
                     mounts.setdefault(parts[0], parts[1])
     
     for disk in disks:
-        # Read total raw hardware capacity from /sys/block/<disk>/size (512-byte sectors)
+        # Read total raw hardware capacity from /sys/block/<disk>/size
         total_hw = 0
         size_file = f"/sys/block/{disk}/size"
         if os.path.exists(size_file):
@@ -76,7 +75,7 @@ def get_disk_storage(disks: list = None) -> dict:
         
         for dev_path, mount_point in mounts.items():
             dev_name = os.path.basename(dev_path)
-            # Match disk or its partitions (e.g. sda1 -> sda, nvme0n1p1 -> nvme0n1)
+            # Match disk or its partitions
             if dev_name == disk or dev_name.startswith(disk):
                 try:
                     st = os.statvfs(mount_point)

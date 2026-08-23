@@ -36,11 +36,11 @@ class CpuWidget(Container):
         self.sparkline.update_value(usage)
 
     def update_text(self, snapshot) -> None:
-        """Update only the label — does not touch the graph."""
+        """Update only the label"""
         self.cpu_usage_static.update(f"{snapshot.cpu:.1f}%")
 
     def load_history(self, snapshots: list, time_span: float = 0.0) -> None:
-        """Bulk-load CPU history, time-positioned to show real gaps."""
+        """Bulk-load CPU history,"""
         w = self.sparkline.size.width * 2 or 400
         values = make_time_grid(snapshots, lambda s: s.cpu, time_span, w)
         self.sparkline.load_history(values, timeline_seconds=time_span)

@@ -24,10 +24,6 @@ HISTORY_OPTIONS: list[tuple[str, float | None]] = [
 
 
 def parse_duration(text: str) -> float | None:
-    """Parse a human-readable duration string into seconds.
-    Examples: '120s', '2h', '1d', '30m', '1w'.
-    Returns None if the string cannot be parsed.
-    """
     text = text.strip().lower()
     units = {"s": 1, "m": 60, "h": 3600, "d": 86400, "w": 604800}
     for suffix, multiplier in units.items():
@@ -36,7 +32,7 @@ def parse_duration(text: str) -> float | None:
                 return float(text[:-1]) * multiplier
             except ValueError:
                 return None
-    # Plain number — treat as seconds
+    # Plain number
     try:
         return float(text)
     except ValueError:
@@ -119,7 +115,6 @@ class Menu(Container):
         if duration is not None and duration > 0:
             if hasattr(self.app, "set_history_duration"):
                 self.app.set_history_duration(duration)
-            # Return focus to the selection list so the user isn't trapped
             try:
                 self.query_one(SelectionList).focus()
             except Exception:

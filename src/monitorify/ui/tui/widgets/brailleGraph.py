@@ -11,12 +11,9 @@ _TICK = Style(color="#abb2bf")
 
 
 def make_time_grid(snapshots, value_fn, time_span: float, width: int) -> list:
-    """Map snapshots to a time-positioned list[float | None].
-    Slots with no snapshot remain None — the graph draws nothing there.
-    This ensures gaps where no daemon was running appear as empty space.
-    """
+
     if not snapshots or time_span <= 0 or width <= 0:
-        # Fall back to plain chronological list (no gap info)
+
         return [value_fn(s) for s in snapshots]
 
     now = _time.time()
@@ -70,7 +67,7 @@ class BrailleGraph(Widget):
         if self.data_lines > 1:
             self.history2 = deque(maxlen=max_points)
 
-    # ── helpers ──────────────────────────────────────────────────────────────
+    # helpers
 
     @staticmethod
     def _fmt_age(secs: float) -> str:
@@ -114,7 +111,7 @@ class BrailleGraph(Widget):
         text.append(label.rjust(_SCALE_W - 1), style)
         return text
 
-    # ── public API ────────────────────────────────────────────────────────────
+    # public API
 
     def load_history(
         self,
@@ -137,7 +134,7 @@ class BrailleGraph(Widget):
             self.history2.append(val2)
         self.refresh()
 
-    # ── render ────────────────────────────────────────────────────────────────
+    # render
 
     def render(self) -> RenderResult:
         width_chars = self.size.width
@@ -177,7 +174,7 @@ class BrailleGraph(Widget):
                 x = start_x + i
                 val = data1[len(data1) - num_points + i]
                 if val is None:
-                    continue  # Gap — no daemon data for this slot
+                    continue  # Gap
                 dots = max(self.min_dots, round((val / max_val) * h))
                 for y in range(h - dots, h):
                     if 0 <= y < h:
@@ -206,7 +203,7 @@ class BrailleGraph(Widget):
                 v1 = data1[idx]
                 v2 = data2[idx] if idx < len(data2) else None
                 if v1 is None and v2 is None:
-                    continue  # Gap — skip entirely
+                    continue  # Gap
                 v1 = v1 or 0.0
                 v2 = v2 or 0.0
                 dots1 = int((v1 / max_val) * (h / 2))
