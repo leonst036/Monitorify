@@ -3,6 +3,23 @@ import sys
 import os
 from monitorify import config
 from monitorify.ui.tui.tui import MonitorifyApp
+import argparse
+
+def parse_args():
+    """Parse CLI arguments."""
+    parser = argparse.ArgumentParser(description="Monitorify")
+    parser.add_argument("--ip", type=str, default=None, help="IP address of the remote machine")
+    parser.add_argument("--port", type=int, default=None, help="Port of the remote machine (default: 22)")
+    parser.add_argument("--username", type=str, default=None, help="Username for the remote machine")
+    parser.add_argument("--password", type=str, default=None, help="Password for the remote machine")
+    parser.add_argument("--key_filename", type=str, default=None, help="Path to the key file for the remote machine")
+    parser.add_argument("--command", type=str, default=None, help="Command to run on the remote machine (default: monitorify)")
+    args = parser.parse_args()
+
+    if not args.ip and (args.port is not None or args.username or args.password or args.key_filename or args.command):
+        parser.error("--ip is required when specifying remote connection arguments")
+
+    return args
 
 
 def daemon_already_running() -> bool:
@@ -34,7 +51,45 @@ def start_daemon() -> subprocess.Popen | None:
 
 
 def cli():
-    """Main CLI entrypoint for Monitorify."""
+    """Main CLI entrypoint"""
+    args = parse_args()
+
+    if args.ip:
+        from monitorify.remote.connector import RemoteConnector
+
+        try:
+            connector = RemoteConnector(
+                host=args.ip,
+                port=args.port or 22,
+                username=args.username,
+                password=args.password,
+                key_filename=args.key_filename,
+            )
+            client = connector.connect()
+            try:
+                if not args.command and not connector.is_installed(client):
+                    print(f"Error: Monitorify is not installed on the remote host ({args.ip}).")
+                    response = input("Do you want to install it? (y/n): ").strip().lower()
+                    if response == "y":
+                        success = connector.install(client)
+                        if not success:
+                            print("Installation failed.")
+                            sys.exit(1)
+                    else:
+                        sys.exit(1)
+
+                remote_cmd = args.command or "bash -l -c 'monitorify || python3 -m monitorify'"
+                connector.run_interactive(client, command=remote_cmd)
+            finally:
+                client.close()
+        except ConnectionError as e:
+            print(f"Connection failed: {e}")
+            sys.exit(1)
+        except KeyboardInterrupt:
+            pass
+        return
+
+    # Local mode
     daemon = start_daemon()
     try:
         app = MonitorifyApp()
