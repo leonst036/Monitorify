@@ -1,16 +1,15 @@
 # Monitorify
 ### A terminal montioring tool for linux
 
-## Features
-### CPU monitoring 
-### RAM monitoring
-### Network monitoring
-### Disk monitoring (I/O and storage capacity)
-### Process monitoring
-### Background daemon 
-### Customization menu (toggle widgets, set intervals, and change history window)
-### Historical graphs 
-
+- Features
+- CPU monitoring 
+- RAM monitoring
+- Network monitoring
+- Disk monitoring (I/O and storage capacity)
+- Process monitoring
+- Background daemon
+- Customization menu (toggle widgets, set intervals, and change history window)
+- Historical graphs
 ## Installation
 ### Using pipx
 ```bash
@@ -34,7 +33,8 @@ pip install .
 monitorify
 ```
 
-## Tech stack
-### Python | Textual
-### SQLite
-### Linux
+## Tech Stack
+
+* **Language & TUI:** Python, Textual
+* **Database:** SQLite
+* **Target OS:** Linux
