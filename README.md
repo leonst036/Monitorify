@@ -38,3 +38,13 @@ monitorify
 * **Language & TUI:** Python, Textual
 * **Database:** SQLite
 * **Target OS:** Linux
+
+## Remote
+
+To use Monitorify remotely over SSH on your server, you can set the following parameters:
+
+- `--ip` – Set the target IP address.
+- `--port` – Set the SSH port.
+- `--username` – Set the username for the remote host.
+- `--password` – Set the password for the SSH server.
+- `--key_filename` – Set the path to an SSH key *(optional)*.

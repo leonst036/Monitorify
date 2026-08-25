@@ -13,10 +13,9 @@ def parse_args():
     parser.add_argument("--username", type=str, default=None, help="Username for the remote machine")
     parser.add_argument("--password", type=str, default=None, help="Password for the remote machine")
     parser.add_argument("--key_filename", type=str, default=None, help="Path to the key file for the remote machine")
-    parser.add_argument("--command", type=str, default=None, help="Command to run on the remote machine (default: monitorify)")
     args = parser.parse_args()
 
-    if not args.ip and (args.port is not None or args.username or args.password or args.key_filename or args.command):
+    if not args.ip and (args.port is not None or args.username or args.password or args.key_filename):
         parser.error("--ip is required when specifying remote connection arguments")
 
     return args
