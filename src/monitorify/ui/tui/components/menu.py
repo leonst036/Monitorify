@@ -41,6 +41,10 @@ def parse_duration(text: str) -> float | None:
 
 class Menu(Container):
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._syncing_menu_state = False
+
     def compose(self):
         with Vertical(id="menu"):
             yield Static("[bold #61afef]M[/bold #61afef]enu", id="menu_title")
@@ -71,22 +75,41 @@ class Menu(Container):
 
     def populate_menu(self) -> None:
         """Populates selection list with widget options and updates interval select value."""
+        self._syncing_menu_state = True
         try:
             selection_list = self.query_one(SelectionList)
             selection_list.clear_options()
-            for name, widget_id in self.get_available_widgets().items():
+            saved_visible = self.app.config_manager.get("visible_widgets")
+            widgets = self.get_available_widgets()
+            for name, widget_id in widgets.items():
                 widget = self.app.query_one(f"#{widget_id}")
+                if saved_visible is not None:
+                    initial_state = widget_id in saved_visible
+                else:
+                    initial_state = widget.display
                 selection_list.add_option(
-                    Selection(prompt=name, value=name, initial_state=widget.display)
+                    Selection(prompt=name, value=name, initial_state=initial_state)
                 )
         except Exception:
             pass
+        finally:
+            self._syncing_menu_state = False
 
         try:
             interval_select = self.query_one("#interval_select", Select)
             current_interval = getattr(self.app, "update_interval", 1.0)
             if interval_select.value != current_interval:
                 interval_select.value = current_interval
+        except Exception:
+            pass
+
+        try:
+            history_select = self.query_one("#history_select", Select)
+            current_history = getattr(self.app, "history_duration", 60.0)
+            if history_select.value != current_history:
+                history_select.value = current_history
+            custom_input = self.query_one("#custom_history_input", Input)
+            custom_input.display = history_select.value is None
         except Exception:
             pass
 
@@ -124,6 +147,8 @@ class Menu(Container):
 
     def on_selection_list_selected_changed(self, event: SelectionList.SelectedChanged) -> None:
         """Toggles widget visibility based on selection changes."""
+        if self._syncing_menu_state:
+            return
         selected_names = event.selection_list.selected
         for name, widget_id in self.get_available_widgets().items():
             try:
@@ -133,6 +158,8 @@ class Menu(Container):
                 pass
         if hasattr(self.app, "update_layout"):
             self.app.update_layout()
+        if hasattr(self.app, "persist_config"):
+            self.app.persist_config()
 
     def get_available_widgets(self) -> dict[str, str]:
         """Returns a map of {widget_name: widget_id} from main_container."""

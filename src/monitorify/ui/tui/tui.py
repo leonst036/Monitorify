@@ -16,6 +16,7 @@ from monitorify.ui.tui.components.widgetManager import WidgetManager
 from monitorify.ui.tui.widgets.programmListWidget import ProgrammListWidget
 from monitorify.storage import Database
 from monitorify import config
+from monitorify.config.configManager import configManager
 
 
 class MonitorifyApp(App):
@@ -30,12 +31,29 @@ class MonitorifyApp(App):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.config_manager = configManager(str(config.CONFIG_PATH))
         # Read-only DB connection
         self.db = Database(config.DB_PATH)
         self.db.connect()
-        # Default history window: 1 minute
-        self.history_duration: float = 60.0
+        # Load saved preferences from config
+        self.update_interval = float(self.config_manager.get("update_interval", 1.0))
+        self.history_duration: float = float(self.config_manager.get("history_duration", 60.0))
         self._last_graph_refresh: float = 0.0
+
+    def persist_config(self) -> None:
+        visible_widgets = []
+        for widget_id in ["cpu_widget", "ram_widget", "programmList_widget", "network_widget", "disk_widget"]:
+            try:
+                if self.query_one(f"#{widget_id}").display:
+                    visible_widgets.append(widget_id)
+            except Exception:
+                pass
+
+        self.config_manager.save_config({
+            "update_interval": float(self.update_interval),
+            "history_duration": float(self.history_duration),
+            "visible_widgets": visible_widgets,
+        })
 
     def compose(self) -> ComposeResult:
         with Container(id="main_container"):
@@ -52,15 +70,25 @@ class MonitorifyApp(App):
     def on_mount(self) -> None:
         self.action_get_window_size()
         self.widget_manager = WidgetManager(self.query_one("#main_container"))
+        saved_visible = self.config_manager.get("visible_widgets")
+        if saved_visible is not None:
+            visible_widgets = set(saved_visible)
+        else:
+            visible_widgets = set()
+        for widget_id in ["cpu_widget", "ram_widget", "programmList_widget", "network_widget", "disk_widget"]:
+            try:
+                widget = self.query_one(f"#{widget_id}")
+                widget.display = widget_id in visible_widgets if saved_visible is not None else widget.display
+            except Exception:
+                pass
         self.update_layout()
-        self.update_interval = 1.0
         # Load history from DB on startup
         self.call_after_refresh(self._load_initial_history)
         self.update_timer = self.set_interval(self.update_interval, self.update_display)
 
     def _load_initial_history(self) -> None:
         """Load history from DB after the first render so widgets have their sizes."""
-        self.set_history_duration(self.history_duration)
+        self.set_history_duration(self.history_duration, persist=False)
 
     def set_update_interval(self, seconds: float) -> None:
         """Updates the graph refresh interval."""
@@ -68,10 +96,13 @@ class MonitorifyApp(App):
         if hasattr(self, "update_timer") and self.update_timer:
             self.update_timer.stop()
         self.update_timer = self.set_interval(self.update_interval, self.update_display)
+        self.persist_config()
 
-    def set_history_duration(self, seconds: float) -> None:
+    def set_history_duration(self, seconds: float, persist: bool = True) -> None:
         """Load historical metrics from DB and push them into all graph widgets."""
         self.history_duration = seconds
+        if persist:
+            self.persist_config()
         start_time = time.time() - seconds
         snapshots = self.db.get_history(limit=10000, start_time=start_time)
 
