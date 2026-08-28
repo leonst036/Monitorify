@@ -1,9 +1,9 @@
-from typing import List, Optional, Any, Callable
+from typing import List, Optional, Any, Callable, Union
 from monitorify.collector.worker import Worker
 
 
 class Manager:
-    def __init__(self, db: Optional[Any] = None, interval: float = 1.0):
+    def __init__(self, db: Optional[Any] = None, interval: Union[float, Callable[[], float]] = 1.0):
         self._workers: List[Worker] = []
         self._interval = interval
         if db is None:
