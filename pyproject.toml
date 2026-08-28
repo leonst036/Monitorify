@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "monitorify"
-version = "1.0.1"
+version = "1.0.2"
 description = "A lightweight Linux terminal system monitor built with Textual"
 readme = "README.md"
 authors = [
