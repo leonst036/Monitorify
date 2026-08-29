@@ -62,6 +62,24 @@ ProgrammListWidget>Static {
     color: #61afef;
 }
 
+#programm_list_view ListItem.selected,
+.programm_list_view ListItem.selected {
+    background: #284263;
+    text-style: bold;
+}
+
+#programm_list_view ListItem.selected:hover,
+.programm_list_view ListItem.selected:hover {
+    background: #32537d;
+}
+
+#programm_list_view ListItem.selected.--highlight,
+.programm_list_view ListItem.selected.--highlight {
+    background: #3d6699;
+    color: #ffffff;
+    text-style: bold;
+}
+
 #network_graph,
 #disk_graph {
     width: 1fr;

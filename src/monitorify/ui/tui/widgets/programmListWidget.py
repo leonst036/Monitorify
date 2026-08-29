@@ -95,10 +95,24 @@ class ProgrammListWidget(Container):
                     self.active_info_pid = pid
                     self.update_details()
 
+    def update_selection_classes(self) -> None:
+        """Update selected class on ListItems based on active_info_pid."""
+        if not hasattr(self, "list_view"):
+            return
+        items = list(self.list_view.query(ListItem))
+        for i, item in enumerate(items):
+            is_selected = (
+                self.active_info_pid is not None
+                and i < len(self.current_sorted_data)
+                and self.current_sorted_data[i].get("pid") == self.active_info_pid
+            )
+            item.set_class(is_selected, "selected")
+
     def update_details(self) -> None:
         if not hasattr(self, "info_static") or not hasattr(self, "list_view"):
             return
 
+        self.update_selection_classes()
         self.info_static.update(f"Processes: {self.total_count}")
 
         if not self.display or self.active_info_pid is None:
@@ -191,9 +205,19 @@ class ProgrammListWidget(Container):
         for i in range(update_limit):
             formatted_text = _format_process_item(sliced_data[i])
             existing_items[i].query_one(Static).update(formatted_text)
+            is_selected = (
+                self.active_info_pid is not None
+                and sliced_data[i].get("pid") == self.active_info_pid
+            )
+            existing_items[i].set_class(is_selected, "selected")
 
         if new_count > existing_count:
-            new_items = [ListItem(Static(_format_process_item(d))) for d in sliced_data[existing_count:]]
+            new_items = []
+            for d in sliced_data[existing_count:]:
+                item = ListItem(Static(_format_process_item(d)))
+                if self.active_info_pid is not None and d.get("pid") == self.active_info_pid:
+                    item.add_class("selected")
+                new_items.append(item)
             self.list_view.extend(new_items)
         elif existing_count > new_count:
             for item in existing_items[new_count:]:
