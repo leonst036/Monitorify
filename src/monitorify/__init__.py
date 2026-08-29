@@ -1,3 +1,3 @@
 """Monitorify - A lightweight Linux terminal system monitor."""
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
