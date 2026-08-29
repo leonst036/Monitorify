@@ -7,6 +7,7 @@ from textual.app import App, ComposeResult
 # pyrefly: ignore [missing-import]
 from textual.widgets import Header, Footer, Label
 from textual.containers import Container, Center, Middle
+from textual.events import Click
 from monitorify.ui.tui.widgets.cpuWidget import CpuWidget
 from monitorify.ui.tui.widgets.ramWidget import RamWidget
 from monitorify.ui.tui.widgets.networkWidget import NetworkWidget
@@ -199,6 +200,13 @@ class MonitorifyApp(App):
                 menu.query_one(SelectionList).focus()
             except Exception:
                 pass
+
+    def on_click(self, event: Click) -> None:
+        try:
+            programm_widget = self.query_one(ProgrammListWidget)
+            programm_widget.handle_global_click(event)
+        except Exception:
+            pass
 
     def on_unmount(self) -> None:
         self.db.disconnect()

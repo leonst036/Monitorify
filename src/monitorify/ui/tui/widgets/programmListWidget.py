@@ -73,27 +73,71 @@ class ProgrammListWidget(Container):
 
     @on(ListView.Selected)
     def on_list_view_selected(self, event: ListView.Selected) -> None:
-        idx = self.list_view.index
+        idx = event.index if getattr(event, "index", None) is not None else self.list_view.index
         if idx is not None and 0 <= idx < len(self.current_sorted_data):
             d = self.current_sorted_data[idx]
             pid = d.get("pid")
             if pid is not None:
-                if self.active_info_pid == pid:
-                    self.active_info_pid = None
-                else:
-                    self.active_info_pid = pid
+                self.active_info_pid = pid
                 self.update_details()
 
     @on(ListView.Highlighted)
     def on_list_view_highlighted(self, event: ListView.Highlighted) -> None:
         if self.active_info_pid is not None:
-            idx = self.list_view.index
+            idx = getattr(event, "item_index", None)
+            if idx is None:
+                idx = self.list_view.index
             if idx is not None and 0 <= idx < len(self.current_sorted_data):
                 d = self.current_sorted_data[idx]
                 pid = d.get("pid")
                 if pid is not None:
                     self.active_info_pid = pid
                     self.update_details()
+
+    def is_child_of_proc_info_box(self, widget) -> bool:
+        curr = widget
+        while curr:
+            if curr is getattr(self, "proc_info_box", None) or getattr(curr, "id", None) == "proc_info_box":
+                return True
+            curr = getattr(curr, "parent", None)
+        return False
+
+    def get_clicked_list_item_index(self, widget) -> int | None:
+        if not hasattr(self, "list_view"):
+            return None
+        curr = widget
+        while curr:
+            if isinstance(curr, ListItem) and curr.parent is self.list_view:
+                try:
+                    items = list(self.list_view.query(ListItem))
+                    return items.index(curr)
+                except ValueError:
+                    return None
+            curr = getattr(curr, "parent", None)
+        return None
+
+    def is_header(self, widget) -> bool:
+        curr = widget
+        while curr:
+            if getattr(curr, "id", None) == "programm_list_header":
+                return True
+            curr = getattr(curr, "parent", None)
+        return False
+
+    def handle_global_click(self, event: Click) -> None:
+        item_idx = self.get_clicked_list_item_index(event.widget)
+        if item_idx is not None:
+            if 0 <= item_idx < len(self.current_sorted_data):
+                self.active_info_pid = self.current_sorted_data[item_idx].get("pid")
+                self.update_details()
+            return
+
+        if self.is_child_of_proc_info_box(event.widget) or self.is_header(event.widget):
+            return
+
+        if self.active_info_pid is not None:
+            self.active_info_pid = None
+            self.update_details()
 
     def update_selection_classes(self) -> None:
         """Update selected class on ListItems based on active_info_pid."""
