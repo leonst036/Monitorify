@@ -1,8 +1,8 @@
 # pyrefly: ignore [missing-import]
-from textual.containers import Container
+from textual.containers import Container, Horizontal
 # pyrefly: ignore [missing-import]
-from textual.widgets import ListItem, ListView, Static
-from textual import on
+from textual.widgets import ListItem, ListView, Static, Input
+from textual import on, events
 from textual.events import Click
 from monitorify.stats.programmList import (
     get_latest_process_items_data,
@@ -40,10 +40,15 @@ class ProgrammListWidget(Container):
         self.current_sorted_data = []
         self.total_count = 0
         self.active_info_pid = None
+        self.search_query = ""
+        self.filtered_count = 0
 
     def compose(self):
-        self.info_static = Static("Processes: 0", id="programm_list_info")
-        yield self.info_static
+        with Horizontal(id="programm_list_top"):
+            self.info_static = Static("Processes: 0", id="programm_list_info")
+            yield self.info_static
+            self.search_input = Input(placeholder="Search (/) ...", id="proc_search_input")
+            yield self.search_input
 
         header_str = f"[bold underline]{'PID':>6}[/bold underline]  [bold underline]{'NAME':<25}[/bold underline] [bold underline]{'RAM(MB)':>10}[/bold underline]  [bold underline]{'CPU(%)':>7}[/bold underline]"
         self.header_static = Static(header_str, id="programm_list_header")
@@ -94,10 +99,55 @@ class ProgrammListWidget(Container):
                     self.active_info_pid = pid
                     self.update_details()
 
+    @on(Input.Changed, "#proc_search_input")
+    def on_search_changed(self, event: Input.Changed) -> None:
+        self.search_query = event.value
+        self.rendered_limit = 0
+        if hasattr(self, "list_view"):
+            self.list_view.scroll_to(y=0)
+        self.update_list(force=True)
+
+    @on(Input.Submitted, "#proc_search_input")
+    def on_search_submitted(self, event: Input.Submitted) -> None:
+        if hasattr(self, "list_view"):
+            self.list_view.focus()
+            if self.list_view.index is None and len(self.list_view.children) > 0:
+                self.list_view.index = 0
+
+    def on_key(self, event: events.Key) -> None:
+        if not hasattr(self, "search_input") or not hasattr(self, "list_view"):
+            return
+        if self.search_input.has_focus:
+            if event.key == "escape":
+                if self.search_input.value:
+                    self.search_input.value = ""
+                self.list_view.focus()
+                event.prevent_default()
+                event.stop()
+            elif event.key == "down":
+                self.list_view.focus()
+                if self.list_view.index is None and len(self.list_view.children) > 0:
+                    self.list_view.index = 0
+                event.prevent_default()
+                event.stop()
+        elif self.list_view.has_focus:
+            if event.key == "slash":
+                self.search_input.focus()
+                event.prevent_default()
+                event.stop()
+
     def is_child_of_proc_info_box(self, widget) -> bool:
         curr = widget
         while curr:
             if curr is getattr(self, "proc_info_box", None) or getattr(curr, "id", None) == "proc_info_box":
+                return True
+            curr = getattr(curr, "parent", None)
+        return False
+
+    def is_search_input(self, widget) -> bool:
+        curr = widget
+        while curr:
+            if getattr(curr, "id", None) == "proc_search_input":
                 return True
             curr = getattr(curr, "parent", None)
         return False
@@ -132,7 +182,7 @@ class ProgrammListWidget(Container):
                 self.update_details()
             return
 
-        if self.is_child_of_proc_info_box(event.widget) or self.is_header(event.widget):
+        if self.is_child_of_proc_info_box(event.widget) or self.is_header(event.widget) or self.is_search_input(event.widget):
             return
 
         if self.active_info_pid is not None:
@@ -157,7 +207,10 @@ class ProgrammListWidget(Container):
             return
 
         self.update_selection_classes()
-        self.info_static.update(f"Processes: {self.total_count}")
+        if self.search_query.strip():
+            self.info_static.update(f"Processes: {getattr(self, 'filtered_count', len(self.current_sorted_data))}/{self.total_count}")
+        else:
+            self.info_static.update(f"Processes: {self.total_count}")
 
         if not self.display or self.active_info_pid is None:
             if hasattr(self, "proc_info_box") and self.proc_info_box:
@@ -223,7 +276,17 @@ class ProgrammListWidget(Container):
             return
 
         self.last_cache_version = version
-        
+
+        # Filter by search query if present
+        query = self.search_query.strip().lower()
+        if query:
+            items_data = [
+                d for d in items_data
+                if query in str(d.get("name", "")).lower() or query in str(d.get("pid", ""))
+            ]
+
+        self.filtered_count = len(items_data)
+
         # Sort items_data based on user selection
         if self.sort_by in ["pid", "ram_ussage", "cpu_ussage"]:
             items_data.sort(key=lambda d: d.get(self.sort_by, 0), reverse=self.sort_reverse)

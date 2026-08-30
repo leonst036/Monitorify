@@ -27,7 +27,8 @@ class MonitorifyApp(App):
     BINDINGS = [
         ("q", "quit"),
         ("c", "quit"),
-        ("m", "menu")
+        ("m", "menu"),
+        ("slash", "search_process"),
     ]
 
     def __init__(self, **kwargs):
@@ -200,6 +201,16 @@ class MonitorifyApp(App):
                 menu.query_one(SelectionList).focus()
             except Exception:
                 pass
+
+    def action_search_process(self) -> None:
+        try:
+            programm_widget = self.query_one(ProgrammListWidget)
+            if programm_widget.display:
+                from textual.widgets import Input
+                search_input = programm_widget.query_one("#proc_search_input", Input)
+                search_input.focus()
+        except Exception:
+            pass
 
     def on_click(self, event: Click) -> None:
         try:

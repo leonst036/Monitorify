@@ -38,6 +38,36 @@ ProgrammListWidget>Static {
     margin-bottom: 1;
 }
 
+#programm_list_top {
+    height: 1;
+    margin-bottom: 1;
+    layout: horizontal;
+    align: left middle;
+}
+
+#programm_list_info {
+    width: auto;
+    min-width: 15;
+    text-style: bold;
+    color: #abb2bf;
+    margin-bottom: 0;
+}
+
+#proc_search_input {
+    width: 1fr;
+    height: 1;
+    border: none;
+    padding: 0 1;
+    background: #282c34;
+    color: #abb2bf;
+    margin-bottom: 0;
+}
+
+#proc_search_input:focus {
+    background: #3e4451;
+    color: #ffffff;
+}
+
 #programm_list_view,
 .programm_list_view {
     height: 1fr;
