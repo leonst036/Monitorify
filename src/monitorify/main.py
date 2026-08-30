@@ -13,9 +13,17 @@ def parse_args():
     parser.add_argument("--username", type=str, default=None, help="Username for the remote machine")
     parser.add_argument("--password", type=str, default=None, help="Password for the remote machine")
     parser.add_argument("--key_filename", type=str, default=None, help="Path to the key file for the remote machine")
+    parser.add_argument("--command", type=str, default=None, help="Command to run on the remote machine")
+    parser.add_argument(
+        "--host",
+        type=str,
+        choices=["add", "list", "remove", "delete"],
+        default=None,
+        help="Manage remote hosts (e.g. add, list, remove)",
+    )
     args = parser.parse_args()
 
-    if not args.ip and (args.port is not None or args.username or args.password or args.key_filename):
+    if not args.ip and not args.host and (args.port is not None or args.username or args.password or args.key_filename):
         parser.error("--ip is required when specifying remote connection arguments")
 
     return args
@@ -53,7 +61,12 @@ def cli():
     """Main CLI entrypoint"""
     args = parse_args()
 
-    if args.ip:
+    if args.host:
+        from monitorify.remote.addRemote import handle_host_action
+
+        handle_host_action(args.host, args)
+        return
+    elif args.ip:
         from monitorify.remote.connector import RemoteConnector
 
         try:

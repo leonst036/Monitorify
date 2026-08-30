@@ -111,6 +111,7 @@ To use Monitorify remotely over SSH on your server, you can set the following pa
 - `--username` – Set the username for the remote host.
 - `--password` – Set the password for the SSH server.
 - `--key_filename` – Set the path to an SSH key *(optional)*.
+- `--host` – Manage remote hosts in the database (`add`, `list`, `remove`).
 
 ## Tech Stack
 

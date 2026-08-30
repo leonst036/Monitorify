@@ -35,6 +35,18 @@ class Database:
             )
             """
         )
+        self._connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS hosts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ip TEXT NOT NULL,
+                port INTEGER DEFAULT 22,
+                username TEXT DEFAULT 'root',
+                password TEXT,
+                key_filename TEXT
+            )
+            """
+        )
         self._connection.commit()
 
         # Migrate existing table schema if columns are missing
@@ -152,3 +164,84 @@ class Database:
             self._connection.commit()
         except Exception as e:
             print(f"Error pruning metrics: {e}")
+
+    def save_host(
+        self,
+        ip: str,
+        port: int = 22,
+        username: str = "root",
+        password: Optional[str] = None,
+        key_filename: Optional[str] = None,
+    ) -> int:
+        """Save a remote host to the database and return its ID."""
+        self._ensure_connected()
+        try:
+            cursor = self._connection.execute(
+                """
+                INSERT INTO hosts (ip, port, username, password, key_filename)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (ip, port, username, password, key_filename),
+            )
+            self._connection.commit()
+            return cursor.lastrowid
+        except Exception as e:
+            print(f"Error saving host: {e}")
+            return -1
+
+    def get_hosts(self) -> List[dict]:
+        """Fetch all saved remote hosts."""
+        self._ensure_connected()
+        try:
+            cursor = self._connection.cursor()
+            cursor.execute("SELECT id, ip, port, username, password, key_filename FROM hosts ORDER BY id ASC")
+            rows = cursor.fetchall()
+            return [
+                {
+                    "id": row["id"],
+                    "ip": row["ip"],
+                    "port": row["port"],
+                    "username": row["username"],
+                    "password": row["password"],
+                    "key_filename": row["key_filename"],
+                }
+                for row in rows
+            ]
+        except Exception as e:
+            print(f"Error fetching hosts: {e}")
+            return []
+
+    def get_host(self, host_id: int) -> Optional[dict]:
+        """Fetch a specific remote host by ID."""
+        self._ensure_connected()
+        try:
+            cursor = self._connection.cursor()
+            cursor.execute(
+                "SELECT id, ip, port, username, password, key_filename FROM hosts WHERE id = ?",
+                (host_id,),
+            )
+            row = cursor.fetchone()
+            if row:
+                return {
+                    "id": row["id"],
+                    "ip": row["ip"],
+                    "port": row["port"],
+                    "username": row["username"],
+                    "password": row["password"],
+                    "key_filename": row["key_filename"],
+                }
+            return None
+        except Exception as e:
+            print(f"Error fetching host {host_id}: {e}")
+            return None
+
+    def delete_host(self, host_id: int) -> bool:
+        """Delete a remote host by ID."""
+        self._ensure_connected()
+        try:
+            self._connection.execute("DELETE FROM hosts WHERE id = ?", (host_id,))
+            self._connection.commit()
+            return True
+        except Exception as e:
+            print(f"Error deleting host {host_id}: {e}")
+            return False
