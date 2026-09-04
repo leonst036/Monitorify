@@ -102,16 +102,46 @@ Monitorify follows XDG Base Directory conventions — nothing is written to the 
 | **Collection interval** | `1.0` seconds | `MONITORIFY_INTERVAL` env var |
 | **Data retention** | `604800` s (7 days) | `MONITORIFY_RETENTION` env var |
 
-## Remote
+## Remote Monitoring
 
-To use Monitorify remotely over SSH on your server, you can set the following parameters:
+Monitorify allows you to monitor remote Linux servers over SSH directly from your local terminal.
 
-- `--ip` – Set the target IP address.
-- `--port` – Set the SSH port.
-- `--username` – Set the username for the remote host.
-- `--password` – Set the password for the SSH server.
-- `--key_filename` – Set the path to an SSH key *(optional)*.
-- `--host` – Manage remote hosts in the database (`add`, `list`, `remove`).
+### Connecting from the Dashboard (TUI)
+1. Press `m` in the dashboard to open the **Menu**.
+2. In the **Remote Host** dropdown:
+   - Select any saved server to connect instantly.
+   - Select **+ Add new host...** to add credentials interactively.
+3. **Automatic Installation**: If Monitorify is not installed on the remote host, you will be prompted to install it automatically.
+4. Press `q` in the remote session to disconnect and exit back to your shell.
+
+### Managing Remote Hosts via CLI (`--host`)
+Manage saved hosts directly from the command line:
+
+```bash
+# Add a host interactively (passwords entered securely with getpass)
+monitorify --host add
+
+# List all saved remote hosts
+monitorify --host list
+
+# Remove a saved remote host and its stored credentials
+monitorify --host remove
+```
+
+### Connecting Directly via CLI (`--ip`)
+Connect directly to a remote host without opening the local dashboard:
+
+```bash
+# Connect with password or SSH agent
+monitorify --ip 192.168.1.50 --username ubuntu
+
+# Connect using a private key file
+monitorify --ip 192.168.1.50 --username ubuntu --key_filename ~/.ssh/id_rsa
+```
+
+### Security & Credentials
+- Passwords are securely stored in the system's **OS Keyring** (Secret Service / DBus on Linux), not in plaintext SQLite.
+- Database and directory permissions are strictly restricted (`0700` directory, `0600` file).
 
 ## Tech Stack
 
