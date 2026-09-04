@@ -118,7 +118,7 @@ Monitorify allows you to monitor remote Linux servers over SSH directly from you
 Manage saved hosts directly from the command line:
 
 ```bash
-# Add a host interactively (passwords entered securely with getpass)
+# Add a host interactively
 monitorify --host add
 
 # List all saved remote hosts
@@ -132,10 +132,10 @@ monitorify --host remove
 Connect directly to a remote host without opening the local dashboard:
 
 ```bash
-# Connect with password or SSH agent
+
 monitorify --ip 192.168.1.50 --username ubuntu
 
-# Connect using a private key file
+
 monitorify --ip 192.168.1.50 --username ubuntu --key_filename ~/.ssh/id_rsa
 ```
 
