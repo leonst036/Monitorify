@@ -58,7 +58,7 @@ def start_daemon() -> subprocess.Popen | None:
 
 
 def cli():
-    """Main CLI entrypoint"""
+    """Main CLI entrypoint."""
     args = parse_args()
 
     if args.host:
@@ -67,38 +67,19 @@ def cli():
         handle_host_action(args.host, args)
         return
     elif args.ip:
-        from monitorify.remote.connector import RemoteConnector
+        from monitorify.remote.connector import connect_and_run
 
-        try:
-            connector = RemoteConnector(
-                host=args.ip,
-                port=args.port or 22,
-                username=args.username,
-                password=args.password,
-                key_filename=args.key_filename,
-            )
-            client = connector.connect()
-            try:
-                if not args.command and not connector.is_installed(client):
-                    print(f"Error: Monitorify is not installed on the remote host ({args.ip}).")
-                    response = input("Do you want to install it? (y/n): ").strip().lower()
-                    if response == "y":
-                        success = connector.install(client)
-                        if not success:
-                            print("Installation failed.")
-                            sys.exit(1)
-                    else:
-                        sys.exit(1)
-
-                remote_cmd = args.command or "bash -l -c 'monitorify || python3 -m monitorify'"
-                connector.run_interactive(client, command=remote_cmd)
-            finally:
-                client.close()
-        except ConnectionError as e:
-            print(f"Connection failed: {e}")
+        success = connect_and_run(
+            host=args.ip,
+            port=args.port or 22,
+            username=args.username,
+            password=args.password,
+            key_filename=args.key_filename,
+            command=args.command,
+            pause_on_exit=False,
+        )
+        if not success:
             sys.exit(1)
-        except KeyboardInterrupt:
-            pass
         return
 
     # Local mode

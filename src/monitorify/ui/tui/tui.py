@@ -24,6 +24,7 @@ class MonitorifyApp(App):
     CSS_PATH = "css/tui.css"
 
     TITLE = "Monitorify"
+    AUTO_FOCUS = None
     BINDINGS = [
         ("q", "quit"),
         ("c", "quit"),
@@ -84,6 +85,8 @@ class MonitorifyApp(App):
             except Exception:
                 pass
         self.update_layout()
+        # Ensure search input does not steal focus on startup
+        self.set_focus(None)
         # Load history from DB on startup
         self.call_after_refresh(self._load_initial_history)
         self.update_timer = self.set_interval(self.update_interval, self.update_display)
@@ -131,10 +134,14 @@ class MonitorifyApp(App):
             self.widget_manager.update_layout()
 
     def update_display(self) -> None:
+        if getattr(self, "_is_suspended", False):
+            return
+
         self.action_get_window_size()
 
         if not self.query_one("#main_container").display:
             return
+
 
         snapshot = self.db.get_latest()
         if snapshot is None:
@@ -219,8 +226,75 @@ class MonitorifyApp(App):
         except Exception:
             pass
 
+    def connect_to_remote(self, host_id: int) -> None:
+        """Connects to a remote host by ID after suspending the TUI."""
+        host = self.db.get_host(host_id)
+        if not host:
+            return
+
+        self._is_suspended = True
+        session_started = False
+        try:
+            with self.suspend():
+                try:
+                    from monitorify.remote.connector import connect_and_run
+
+                    session_started = connect_and_run(
+                        host=host["ip"],
+                        port=host.get("port") or 22,
+                        username=host.get("username"),
+                        password=host.get("password"),
+                        key_filename=host.get("key_filename"),
+                        pause_on_exit=True,
+                    )
+                except Exception as e:
+                    print(f"Error launching remote session: {e}")
+                    input("Press Enter to return...")
+        except Exception:
+            pass
+        finally:
+            self._is_suspended = False
+
+        if session_started:
+            self.exit()
+            return
+
+        try:
+            menu = self.query_one(Menu)
+            menu.display = False
+        except Exception:
+            pass
+        self.refresh(layout=True)
+
+    def prompt_add_remote(self) -> None:
+        """Suspends the TUI and runs interactive remote host setup."""
+        self._is_suspended = True
+        try:
+            with self.suspend():
+                from monitorify.remote.addRemote import add_remote
+
+                print("\n=== Add Remote Host ===")
+                try:
+                    add_remote(db=self.db)
+                except KeyboardInterrupt:
+                    print("\nCancelled.")
+                except Exception as e:
+                    print(f"\nError: {e}")
+                input("\nPress Enter to return...")
+        except Exception:
+            pass
+        finally:
+            self._is_suspended = False
+            try:
+                menu = self.query_one(Menu)
+                menu.populate_menu()
+            except Exception:
+                pass
+            self.refresh(layout=True)
+
     def on_unmount(self) -> None:
         self.db.disconnect()
+
 
 
 if __name__ == "__main__":

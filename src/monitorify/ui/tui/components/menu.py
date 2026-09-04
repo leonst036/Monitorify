@@ -1,5 +1,5 @@
 # pyrefly: ignore [missing-import]
-from textual.containers import Container, Vertical
+from textual.containers import Container, Vertical, Horizontal
 # pyrefly: ignore [missing-import]
 from textual.widgets import SelectionList, Static, Select, Input
 # pyrefly: ignore [missing-import]
@@ -48,26 +48,36 @@ class Menu(Container):
     def compose(self):
         with Vertical(id="menu"):
             yield Static("[bold #61afef]M[/bold #61afef]enu", id="menu_title")
-            yield Static("[bold #abb2bf]Widgets:[/bold #abb2bf]", classes="menu_label")
-            yield SelectionList[str](id="widget_selector")
-            yield Static("[bold #abb2bf]Update Interval:[/bold #abb2bf]", classes="menu_label")
-            yield Select(
-                options=INTERVAL_OPTIONS,
-                value=1.0,
-                id="interval_select",
-                allow_blank=False,
-            )
-            yield Static("[bold #abb2bf]History Duration:[/bold #abb2bf]", classes="menu_label")
-            yield Select(
-                options=HISTORY_OPTIONS,
-                value=60.0,
-                id="history_select",
-                allow_blank=False,
-            )
-            yield Input(
-                placeholder="Duration e.g. 120s, 2h, 1d, 1w",
-                id="custom_history_input",
-            )
+            with Horizontal(id="menu_body"):
+                with Vertical(id="menu_left_col"):
+                    yield Static("[bold #abb2bf]Widgets:[/bold #abb2bf]", classes="menu_label")
+                    yield SelectionList[str](id="widget_selector")
+                with Vertical(id="menu_right_col"):
+                    yield Static("[bold #abb2bf]Update Interval:[/bold #abb2bf]", classes="menu_label")
+                    yield Select(
+                        options=INTERVAL_OPTIONS,
+                        value=1.0,
+                        id="interval_select",
+                        allow_blank=False,
+                    )
+                    yield Static("[bold #abb2bf]History Duration:[/bold #abb2bf]", classes="menu_label")
+                    yield Select(
+                        options=HISTORY_OPTIONS,
+                        value=60.0,
+                        id="history_select",
+                        allow_blank=False,
+                    )
+                    yield Input(
+                        placeholder="Duration e.g. 120s, 2h, 1d, 1w",
+                        id="custom_history_input",
+                    )
+                    yield Static("[bold #abb2bf]Remote Host:[/bold #abb2bf]", classes="menu_label")
+                    yield Select(
+                        options=[("No saved hosts", "__none__")],
+                        prompt="Select remote host",
+                        id="remote_select",
+                        allow_blank=True,
+                    )
 
     def on_mount(self) -> None:
         self.query_one("#custom_history_input", Input).display = False
@@ -77,44 +87,64 @@ class Menu(Container):
         """Populates selection list with widget options and updates interval select value."""
         self._syncing_menu_state = True
         try:
-            selection_list = self.query_one(SelectionList)
-            selection_list.clear_options()
-            saved_visible = self.app.config_manager.get("visible_widgets")
-            widgets = self.get_available_widgets()
-            for name, widget_id in widgets.items():
-                widget = self.app.query_one(f"#{widget_id}")
-                if saved_visible is not None:
-                    initial_state = widget_id in saved_visible
+            try:
+                selection_list = self.query_one(SelectionList)
+                selection_list.clear_options()
+                saved_visible = self.app.config_manager.get("visible_widgets")
+                widgets = self.get_available_widgets()
+                for name, widget_id in widgets.items():
+                    widget = self.app.query_one(f"#{widget_id}")
+                    if saved_visible is not None:
+                        initial_state = widget_id in saved_visible
+                    else:
+                        initial_state = widget.display
+                    selection_list.add_option(
+                        Selection(prompt=name, value=name, initial_state=initial_state)
+                    )
+            except Exception:
+                pass
+
+            try:
+                interval_select = self.query_one("#interval_select", Select)
+                current_interval = getattr(self.app, "update_interval", 1.0)
+                if interval_select.value != current_interval:
+                    interval_select.value = current_interval
+            except Exception:
+                pass
+
+            try:
+                history_select = self.query_one("#history_select", Select)
+                current_history = getattr(self.app, "history_duration", 60.0)
+                if history_select.value != current_history:
+                    history_select.value = current_history
+                custom_input = self.query_one("#custom_history_input", Input)
+                custom_input.display = history_select.value is None
+            except Exception:
+                pass
+
+            try:
+                remote_select = self.query_one("#remote_select", Select)
+                hosts = self.app.db.get_hosts() if hasattr(self.app, "db") and self.app.db else []
+                options = []
+                if not hosts:
+                    options.append(("(No saved hosts)", "__none__"))
                 else:
-                    initial_state = widget.display
-                selection_list.add_option(
-                    Selection(prompt=name, value=name, initial_state=initial_state)
-                )
-        except Exception:
-            pass
+                    for h in hosts:
+                        label = f"{h['username']}@{h['ip']}:{h['port']}"
+                        options.append((label, str(h["id"])))
+                options.append(("+ Add new host...", "__add__"))
+                remote_select.set_options(options)
+                remote_select.clear()
+            except Exception:
+                pass
         finally:
             self._syncing_menu_state = False
 
-        try:
-            interval_select = self.query_one("#interval_select", Select)
-            current_interval = getattr(self.app, "update_interval", 1.0)
-            if interval_select.value != current_interval:
-                interval_select.value = current_interval
-        except Exception:
-            pass
-
-        try:
-            history_select = self.query_one("#history_select", Select)
-            current_history = getattr(self.app, "history_duration", 60.0)
-            if history_select.value != current_history:
-                history_select.value = current_history
-            custom_input = self.query_one("#custom_history_input", Input)
-            custom_input.display = history_select.value is None
-        except Exception:
-            pass
-
     def on_select_changed(self, event: Select.Changed) -> None:
-        """Handles changes in the update interval and history duration selectors."""
+        """Handles changes in the update interval, history duration, and remote host selectors."""
+        if self._syncing_menu_state:
+            return
+
         if event.select.id == "interval_select" and event.value is not Select.BLANK:
             if hasattr(self.app, "set_update_interval"):
                 self.app.set_update_interval(float(event.value))
@@ -129,6 +159,17 @@ class Menu(Container):
                 # Apply the selected preset duration
                 if hasattr(self.app, "set_history_duration"):
                     self.app.set_history_duration(float(event.value))
+
+        elif event.select.id == "remote_select":
+            if not event.select.is_blank() and event.value not in (Select.NULL, "__none__"):
+                selected_val = str(event.value)
+                event.select.clear()
+                if selected_val == "__add__":
+                    if hasattr(self.app, "prompt_add_remote"):
+                        self.app.call_after_refresh(self.app.prompt_add_remote)
+                elif selected_val.isdigit():
+                    if hasattr(self.app, "connect_to_remote"):
+                        self.app.call_after_refresh(self.app.connect_to_remote, int(selected_val))
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         """Parses and applies custom history duration on Enter."""

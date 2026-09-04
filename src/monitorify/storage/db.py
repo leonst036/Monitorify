@@ -14,12 +14,23 @@ class Database:
         dir_name = os.path.dirname(self.path)
         if dir_name and not os.path.exists(dir_name):
             try:
-                os.makedirs(dir_name, exist_ok=True)
+                os.makedirs(dir_name, mode=0o700, exist_ok=True)
             except Exception as e:
                 print(f"Error creating directory: {e}")
 
+        if dir_name and os.path.exists(dir_name):
+            try:
+                os.chmod(dir_name, 0o700)
+            except Exception:
+                pass
+
         # check_same_thread=False enables background worker threads to write safely
         self._connection = sqlite3.connect(self.path, check_same_thread=False)
+        if os.path.exists(self.path):
+            try:
+                os.chmod(self.path, 0o600)
+            except Exception:
+                pass
         self._connection.row_factory = sqlite3.Row
         self._connection.execute(
             """
@@ -179,12 +190,17 @@ class Database:
             cursor = self._connection.execute(
                 """
                 INSERT INTO hosts (ip, port, username, password, key_filename)
-                VALUES (?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, NULL, ?)
                 """,
-                (ip, port, username, password, key_filename),
+                (ip, port, username, key_filename),
             )
             self._connection.commit()
-            return cursor.lastrowid
+            host_id = cursor.lastrowid
+            if host_id and password:
+                from monitorify.storage.keyring_helper import set_host_password
+
+                set_host_password(host_id, password)
+            return host_id
         except Exception as e:
             print(f"Error saving host: {e}")
             return -1
@@ -196,17 +212,35 @@ class Database:
             cursor = self._connection.cursor()
             cursor.execute("SELECT id, ip, port, username, password, key_filename FROM hosts ORDER BY id ASC")
             rows = cursor.fetchall()
-            return [
-                {
-                    "id": row["id"],
-                    "ip": row["ip"],
-                    "port": row["port"],
-                    "username": row["username"],
-                    "password": row["password"],
-                    "key_filename": row["key_filename"],
-                }
-                for row in rows
-            ]
+            from monitorify.storage.keyring_helper import get_host_password, set_host_password
+
+            result = []
+            for row in rows:
+                raw_pwd = row["password"]
+                if raw_pwd:
+                    set_host_password(row["id"], raw_pwd)
+                    try:
+                        self._connection.execute(
+                            "UPDATE hosts SET password = NULL WHERE id = ?", (row["id"],)
+                        )
+                        self._connection.commit()
+                    except Exception:
+                        pass
+                    password = raw_pwd
+                else:
+                    password = get_host_password(row["id"])
+
+                result.append(
+                    {
+                        "id": row["id"],
+                        "ip": row["ip"],
+                        "port": row["port"],
+                        "username": row["username"],
+                        "password": password,
+                        "key_filename": row["key_filename"],
+                    }
+                )
+            return result
         except Exception as e:
             print(f"Error fetching hosts: {e}")
             return []
@@ -222,12 +256,28 @@ class Database:
             )
             row = cursor.fetchone()
             if row:
+                from monitorify.storage.keyring_helper import get_host_password, set_host_password
+
+                raw_pwd = row["password"]
+                if raw_pwd:
+                    set_host_password(row["id"], raw_pwd)
+                    try:
+                        self._connection.execute(
+                            "UPDATE hosts SET password = NULL WHERE id = ?", (row["id"],)
+                        )
+                        self._connection.commit()
+                    except Exception:
+                        pass
+                    password = raw_pwd
+                else:
+                    password = get_host_password(row["id"])
+
                 return {
                     "id": row["id"],
                     "ip": row["ip"],
                     "port": row["port"],
                     "username": row["username"],
-                    "password": row["password"],
+                    "password": password,
                     "key_filename": row["key_filename"],
                 }
             return None
@@ -241,6 +291,9 @@ class Database:
         try:
             self._connection.execute("DELETE FROM hosts WHERE id = ?", (host_id,))
             self._connection.commit()
+            from monitorify.storage.keyring_helper import delete_host_password
+
+            delete_host_password(host_id)
             return True
         except Exception as e:
             print(f"Error deleting host {host_id}: {e}")

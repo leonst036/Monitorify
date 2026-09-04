@@ -1,9 +1,12 @@
 Screen {
+    layers: base overlay;
+    align: center middle;
     background: transparent;
     padding: 0;
 }
 
 #main_container {
+    layer: base;
     layout: grid;
     grid-size: 2;
     grid-columns: 1fr 1fr;
@@ -173,18 +176,41 @@ StatusWidget {
 
 Menu {
     display: none;
-    position: absolute;
-    align: center middle;
-    width: 40;
+    layer: overlay;
+    width: 68;
     height: auto;
+    max-height: 90%;
+    overflow-y: auto;
+    background: #21252b;
     border: round #5c6370;
-    padding: 1 2;
+    padding: 0 1;
+}
+
+#menu {
+    height: auto;
 }
 
 #menu_title {
     text-style: bold;
     color: #61afef;
+    width: 100%;
+    content-align: center middle;
     margin-bottom: 0;
+}
+
+#menu_body {
+    height: auto;
+}
+
+#menu_left_col {
+    width: 28;
+    height: auto;
+    margin-right: 1;
+}
+
+#menu_right_col {
+    width: 1fr;
+    height: auto;
 }
 
 .menu_label {
@@ -195,10 +221,12 @@ Menu {
 }
 
 #widget_selector {
-    height: 6;
+    height: 7;
 }
 
-#interval_select {
+#interval_select,
+#history_select,
+#remote_select {
     margin-top: 0;
     margin-bottom: 0;
 }

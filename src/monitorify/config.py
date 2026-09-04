@@ -22,7 +22,7 @@ CONFIG_PATH = Path(os.getenv("MONITORIFY_CONFIG_PATH", str(DATA_DIR / "config.js
 # Daemon PID file path
 DAEMON_PIDFILE = Path(os.getenv("MONITORIFY_PID_PATH", str(RUNTIME_DIR / "daemon.pid")))
 
-# Collection settings (seconds)
+# Collection settings
 DEFAULT_COLLECTION_INTERVAL = float(os.getenv("MONITORIFY_INTERVAL", "1.0"))
 
 # Retention settings (default: 7 days in seconds)
